@@ -1,86 +1,563 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Page</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Sign Up - ScamSniffer</title>
+
+  <!-- Materialize CSS -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+   <!-- Brand favicon -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23667eea'/%3E%3Cstop offset='1' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M32 6l18 6v13c0 13-8.3 24.4-18 28-9.7-3.6-18-15-18-28V12l18-6z'/%3E%3Cpath fill='white' d='M28 34l-6-6-4 4 10 10 16-16-4-4z'/%3E%3C/svg%3E">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    :root{
+      /* Shared look & feel with Home page */
+      --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --shadow-1: 0 8px 20px rgba(0,0,0,.18);
+      --shadow-2: 0 15px 35px rgba(0,0,0,.22);
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+
+      --container-w: clamp(320px, 92vw, 560px);
+      --pad-lg: clamp(24px, 5vw, 48px);
+      --pad-md: clamp(18px, 3.5vw, 28px);
+      --gutter: 16px;
+    }
+
+    /* Base */
+    html, body { height: 100%; }
+    body{
+      background: var(--gradient-1);
+      min-height: 100vh;
+      font-family: 'Roboto', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
       margin: 0;
+      overflow-x: hidden;
     }
 
-    .container {
-      background: white;
-      padding: 30px 40px;
+    /* Navbar & single mobile toggle (same as home) */
+    .navbar-fixed { z-index: 1000; }
+    .brand-logo { font-weight: 700; letter-spacing:.2px; }
+
+    /* Single, always-visible mobile toggle */
+    #nav-toggle{
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
+      left: calc(env(safe-area-inset-left, 0px) + 10px);
+      z-index: 2500; /* above sidenav & overlay */
+      width: 44px; height: 44px;
       border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      text-align: center;
-      width: 300px;
+      display: none;             /* only show on small screens */
+      align-items: center; justify-content: center;
+      background: rgba(33,150,243,.95);
+      box-shadow: 0 6px 16px rgba(0,0,0,.25);
+      color:#fff;
+    }
+    #nav-toggle .material-icons{ line-height:1; font-size: 26px; }
+    @media (max-width: 992px){
+      #nav-toggle{ display: inline-flex; }
     }
 
-    h2 {
-      margin-bottom: 20px;
-      color: #333;
+    /* Sidenav */
+    .sidenav{ z-index: 2000; padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+    .sidenav .user-view{
+      padding-top: 12px;
+      background: rgba(0,0,0,0.22);
+    }
+    .sidenav .user-view .name,
+    .sidenav .user-view .email{
+      color:#fff !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
     }
 
-    input[type="email"],
-    input[type="password"] {
+    /* Main spacing so card sits below fixed navbar */
+    main{ padding: 24px 12px 40px; }
+    @media (min-width: 601px){ main{ padding-top: 36px; } }
+    @media (min-width: 993px){ main{ padding-top: 48px; } }
+
+    /* Container */
+    .signup-container{
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl);
+      padding: var(--pad-lg);
+      box-shadow: var(--shadow-2);
+      width: var(--container-w);
+      position: relative;
+      overflow: hidden;
+      margin: 24px auto 48px; /* centered; does NOT take full page height */
+    }
+    .signup-container::before{
+      content:"";
+      position:absolute; inset:0 0 auto 0; height:5px;
+      background: var(--gradient-1);
+    }
+
+    /* Floating BG elements */
+    .floating-elements{
+      position:absolute; inset:0; pointer-events:none; z-index:-1;
+    }
+    .floating-elements::before,
+    .floating-elements::after{
+      content:""; position:absolute; border-radius:50%;
+      background: rgba(255,255,255,.12); animation: float 6s ease-in-out infinite;
+    }
+    .floating-elements::before{ width: 80px; height:80px; top:10%; right:-18px; }
+    .floating-elements::after { width: 56px; height:56px; bottom:18%; left:-24px; animation-delay: 2.6s; }
+    @keyframes float{ 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-14px) } }
+
+    /* Brand */
+    .brand-section{ text-align:center; margin-bottom: 14px; }
+    .brand-icon{ font-size: 3.2rem; color:#667eea; margin-bottom: 6px; }
+    .brand-title{
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: .2px;
+      font-size: clamp(1.6rem, 4.6vw, 2.2rem);
+      color:#333;
+    }
+    .brand-subtitle{
+      color:#666; margin: 6px 0 18px; font-size: clamp(.98rem, 2.6vw, 1.1rem);
+    }
+
+    /* Feature badges */
+    .features-grid{
+      display:grid; gap: 10px 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 18px;
+    }
+    .feature-item{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color:#fff; padding: 10px 12px; border-radius: 12px;
+      font-size: .9rem; font-weight:600; text-align:center;
+      min-height: 44px;
+    }
+    .feature-item i{ font-size: 1.1rem; }
+
+    /* Inputs */
+    .input-field{ position: relative; margin-bottom: 18px; }
+    .input-field label{
+      color:#666; font-size: .92rem; margin-bottom: 8px; display:block; font-weight: 600;
+    }
+    .input-field input, .input-field select{
       width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      border: 2px solid #e0e0e0; border-radius: 12px;
+      padding: 14px 46px 14px 14px;
+      font-size: 1rem; background:#fff;
+      transition: border-color .25s ease, box-shadow .25s ease;
+    }
+    .input-field input:focus, .input-field select:focus{
+      border-color:#667eea; outline: none;
+      box-shadow: 0 0 0 3px rgba(102,126,234,.12);
+    }
+    .prefix-icon{
+      position:absolute; right: 12px; top: 50%; transform: translateY(2px);
+      color:#667eea; font-size: 1.2rem; pointer-events: none;
     }
 
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
+    /* Role selection */
+    .role-label{ color:#666; font-size:.92rem; margin: 10px 0 10px; font-weight:600; display:block; }
+    .role-selection{
+      display:grid; gap: 12px; grid-template-columns: repeat(2, minmax(0,1fr));
+      margin-bottom: 16px;
+    }
+    .role-card{
+      border: 2px solid #e0e0e0; border-radius: 12px;
+      padding: 16px; text-align:center; cursor:pointer; background:#fff;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+      min-height: 110px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    }
+    .role-card:hover{ border-color:#667eea; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    .role-card i{ font-size: 2rem; margin-bottom: 6px; color:#444; }
+    .role-card.selected{
+      border-color: transparent;
+      background: var(--gradient-1);
+      color:#fff;
+      box-shadow: var(--shadow-1);
+    }
+    .role-card.selected i{ color:#fff; }
+
+    /* Password strength */
+    .password-strength{ margin-top: 6px; font-size: .82rem; }
+    .strength-bar{ height: 4px; border-radius: 2px; background:#e0e0e0; margin-top: 6px; overflow:hidden; }
+    .strength-fill{ height:100%; transition: width .25s ease, background .25s ease; border-radius:2px; }
+
+    /* Buttons (consistent with home) */
+    .btn, .btn-large, .btn-small, .btn-custom{
+      display: inline-flex !important; align-items:center; justify-content:center; gap: 8px;
+      line-height: 1.2 !important; text-transform: none; white-space: nowrap;
+    }
+    .btn-large{ min-height: 52px; padding: 0 22px; }
+    .btn-custom{
+      background: var(--gradient-1);
+      color:#fff; border: 0; border-radius: 999px; padding: 12px 28px; font-weight:700;
+      box-shadow: var(--shadow-1);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn-custom:hover{ transform: translateY(-2px); box-shadow: var(--shadow-2); }
+    .btn-outline{
+      color:#667eea; border: 2px solid #667eea; border-radius: 999px; padding: 10px 20px; font-weight:700; background:#fff;
+      transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-outline:hover{ background:#667eea; color:#fff; transform: translateY(-2px); box-shadow: var(--shadow-1); }
+
+    .signup-btn{ width: 100%; }
+
+    /* Info panel */
+    .security-info{
+      background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+      border: 1px solid #4caf50; border-radius: 12px;
+      padding: 12px; margin-top: 14px; display:flex; align-items:center; gap:8px;
+    }
+    .security-info i{ color:#4caf50; font-size: 1.4rem; }
+    .security-info p{ margin:0; color:#2e7d32; font-size: .9rem; }
+
+    /* Dividers / Links */
+    .divider{ text-align:center; margin: 18px 0; position:relative; }
+    .divider::before{ content:""; position:absolute; inset: 50% 0 auto 0; height:1px; background:#e0e0e0; }
+    .divider span{ position:relative; background: rgba(255,255,255,.96); padding: 0 14px; color:#666; font-weight:600; }
+    .login-link{ text-align:center; margin-top: 6px; }
+    .login-link .btn-outline{ min-height: 44px; }
+
+    /* Responsive tweaks */
+    @media (max-width: 600px){
+      .signup-container{ padding: var(--pad-md); box-shadow: 0 8px 22px rgba(0,0,0,.18); }
+      .features-grid{ grid-template-columns: 1fr; }
+      .role-selection{ grid-template-columns: 1fr; }
+      .feature-item{ min-height: 42px; }
     }
 
-    .login-btn {
-      background: #4CAF50;
-      color: white;
-    }
-
-    .signup-btn {
-      background: #2196F3;
-      color: white;
-    }
-
-    .analyser-btn {
-      background: #FF9800;
-      color: white;
-    }
-
-    button:hover {
-      opacity: 0.9;
+    /* Respect "reduce motion" */
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{ animation: none !important; transition: none !important; scroll-behavior: auto !important; }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <form action="/register" method="POST">
-      <input type="email" name="email" placeholder="Email" required>
-      <input type="password" name="password" placeholder="Password" required>
-      <select name="role">
-        <option value="user">User</option>
-        <option value="admin">Admin</option>
-      </select>
-      <button type="submit">Sign Up</button>
-    </form>
+  <!-- Single, always-visible mobile toggle (same as home) -->
+  <a href="#" id="nav-toggle" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false">
+    <i class="material-icons">menu</i>
+  </a>
+
+  <!-- Top Navigation (same as home) -->
+  <div class="navbar-fixed" role="navigation">
+    <nav class="blue darken-2">
+      <div class="nav-wrapper container">
+        <a href="/" class="brand-logo" aria-label="ScamSniffer Home">
+          <i class="material-icons left" aria-hidden="true">security</i>ScamSniffer
+        </a>
+        <!-- no extra .sidenav-trigger (only one hamburger on mobile) -->
+        <ul class="right hide-on-med-and-down">
+          <li><a href="/#home">Home</a></li>
+          <li><a href="/#features">Features</a></li>
+          <li><a href="/#stats">Statistics</a></li>
+          <li><a href="/#login">Get Started</a></li>
+        </ul>
+      </div>
+    </nav>
   </div>
 
+  <!-- Mobile Side Navigation -->
+  <ul class="sidenav" id="mobile-nav">
+    <li>
+      <div class="user-view blue darken-2 white-text">
+        <div class="background"></div>
+        <span class="name">ScamSniffer</span>
+        <span class="email">Protect yourself from scams</span>
+      </div>
+    </li>
+    <li><a href="/#home"><i class="material-icons">home</i>Home</a></li>
+    <li><a href="/#features"><i class="material-icons">featured_play_list</i>Features</a></li>
+    <li><a href="/#stats"><i class="material-icons">analytics</i>Statistics</a></li>
+    <li><a href="/#login"><i class="material-icons">login</i>Get Started</a></li>
+  </ul>
+
+  <main>
+    <div class="floating-elements" aria-hidden="true"></div>
+
+    <div class="signup-container" role="main" aria-labelledby="title">
+      <!-- Brand -->
+      <div class="brand-section">
+        <i class="material-icons brand-icon" aria-hidden="true">security</i>
+        <h1 class="brand-title" id="title">ScamSniffer</h1>
+        <p class="brand-subtitle">Join the fight against digital fraud</p>
+      </div>
+
+      <!-- Features -->
+      <div class="features-grid" aria-label="Highlights">
+        <div class="feature-item">
+          <i class="material-icons" aria-hidden="true">flash_on</i> Real-time Analysis
+        </div>
+        <div class="feature-item">
+          <i class="material-icons" aria-hidden="true">verified_user</i> 99.7% Accuracy
+        </div>
+        <div class="feature-item">
+          <i class="material-icons" aria-hidden="true">history</i> Track History
+        </div>
+        <div class="feature-item">
+          <i class="material-icons" aria-hidden="true">groups</i> Community Protection
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form action="/register" method="POST" id="signupForm" novalidate>
+        <div class="input-field">
+          <label for="email">Email Address</label>
+          <input type="email" name="email" id="email" required inputmode="email" autocomplete="email"/>
+          <i class="material-icons prefix-icon" aria-hidden="true">email</i>
+        </div>
+
+        <div class="input-field">
+          <label for="password">Password</label>
+          <input type="password" name="password" id="password" required minlength="6" autocomplete="new-password"/>
+          <i class="material-icons prefix-icon" aria-hidden="true">lock</i>
+
+          <div class="password-strength" aria-live="polite">
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <span id="strengthText">Enter a strong password</span>
+          </div>
+        </div>
+
+        <div class="input-field">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" required autocomplete="new-password"/>
+          <i class="material-icons prefix-icon" aria-hidden="true">lock_outline</i>
+          <span id="passwordMatch" style="font-size:.82rem; margin-top:6px; display:block;"></span>
+        </div>
+
+        <!-- Role -->
+        <label class="role-label">Choose Your Role</label>
+        <div class="role-selection" role="radiogroup" aria-label="Role">
+          <div class="role-card selected" data-role="user" role="radio" aria-checked="true" tabindex="0">
+            <i class="material-icons" aria-hidden="true">person</i>
+            <h6 style="margin:.1rem 0 .2rem;">User</h6>
+            <p style="margin:0; font-size:.9rem;">Protect yourself from scams</p>
+          </div>
+          <div class="role-card" data-role="admin" role="radio" aria-checked="false" tabindex="0">
+            <i class="material-icons" aria-hidden="true">admin_panel_settings</i>
+            <h6 style="margin:.1rem 0 .2rem;">Admin</h6>
+            <p style="margin:0; font-size:.9rem;">Manage and monitor system</p>
+          </div>
+        </div>
+        <input type="hidden" name="role" id="selectedRole" value="user"/>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-large btn-custom signup-btn" id="submitBtn">
+          <span class="loading" id="loadingSpinner">
+            <i class="material-icons" aria-hidden="true">refresh</i>
+          </span>
+          <span id="buttonText">
+            <i class="material-icons" aria-hidden="true">person_add</i>
+            Create Account
+          </span>
+        </button>
+      </form>
+
+      <!-- Info -->
+      <div class="security-info" aria-live="polite">
+        <i class="material-icons" aria-hidden="true">verified_user</i>
+        <p>Your data is encrypted and secure. We never share your information with third parties.</p>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider"><span>Already have an account?</span></div>
+
+      <!-- Login -->
+      <div class="login-link">
+        <a href="/signin.html" class="btn-outline">
+          <i class="material-icons" aria-hidden="true">login</i> Sign In Instead
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer (optional, matches home if you want it) -->
+  <footer class="page-footer blue darken-3" style="margin-top:0;">
+    <div class="container">
+      <div class="row">
+        <div class="col l6 s12">
+          <h5 class="white-text">ScamSniffer</h5>
+          <p class="grey-text text-lighten-4">Protecting users from digital threats with advanced AI technology.</p>
+        </div>
+        <div class="col l4 offset-l2 s12">
+          <h5 class="white-text">Quick Links</h5>
+          <ul>
+            <li><a class="grey-text text-lighten-3" href="/#features">Features</a></li>
+            <li><a class="grey-text text-lighten-3" href="/#stats">Statistics</a></li>
+            <li><a class="grey-text text-lighten-3" href="/#login">Get Started</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">© 2024 ScamSniffer. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      /* ===== Navbar: single hamburger toggle + icon sync (same as home) ===== */
+      const sidenavEl = document.getElementById('mobile-nav');
+      const navToggle = document.getElementById('nav-toggle');
+      const toggleIcon = navToggle.querySelector('.material-icons');
+
+      function syncToggleIcon(isOpen) {
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+        toggleIcon.textContent = isOpen ? 'close' : 'menu';
+      }
+
+      const sidenavInstance = M.Sidenav.init(sidenavEl, {
+        edge: 'left',
+        draggable: true,
+        onOpenEnd: () => syncToggleIcon(true),
+        onCloseEnd: () => syncToggleIcon(false)
+      });
+
+      navToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        sidenavInstance.isOpen ? sidenavInstance.close() : sidenavInstance.open();
+      });
+
+      // Close when a link inside the drawer is clicked
+      document.querySelectorAll('#mobile-nav a').forEach(link => {
+        link.addEventListener('click', () => { if (sidenavInstance.isOpen) sidenavInstance.close(); });
+      });
+
+      syncToggleIcon(false);
+
+      /* ===== Role selection ===== */
+      const roleCards = document.querySelectorAll('.role-card');
+      const selectedRoleInput = document.getElementById('selectedRole');
+
+      function setRole(card){
+        roleCards.forEach(c => {
+          c.classList.remove('selected');
+          c.setAttribute('aria-checked', 'false');
+        });
+        card.classList.add('selected');
+        card.setAttribute('aria-checked', 'true');
+        selectedRoleInput.value = card.dataset.role;
+      }
+      roleCards.forEach(card => {
+        card.addEventListener('click', () => setRole(card));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRole(card); }
+        });
+      });
+
+      /* ===== Password strength & match ===== */
+      const passwordInput = document.getElementById('password');
+      const confirmPasswordInput = document.getElementById('confirmPassword');
+      const strengthFill = document.getElementById('strengthFill');
+      const strengthText = document.getElementById('strengthText');
+      const passwordMatch = document.getElementById('passwordMatch');
+
+      function checkPasswordStrength(password) {
+        let strength = 0;
+        let feedback = [];
+
+        if (password.length >= 8) strength += 25; else feedback.push('8+ chars');
+        if (/[a-z]/.test(password)) strength += 25; else feedback.push('lowercase');
+        if (/[A-Z]/.test(password)) strength += 25; else feedback.push('uppercase');
+        if (/[0-9]/.test(password)) strength += 25; else feedback.push('number');
+
+        return { strength, feedback };
+      }
+
+      function updateStrengthUI(val){
+        const { strength, feedback } = checkPasswordStrength(val);
+        strengthFill.style.width = strength + '%';
+        if (strength < 50){
+          strengthFill.style.background = '#f44336';
+          strengthText.textContent = 'Weak – ' + (feedback.join(', ') || 'add variety');
+          strengthText.style.color = '#f44336';
+        } else if (strength < 75){
+          strengthFill.style.background = '#ff9800';
+          strengthText.textContent = 'Medium – add ' + (feedback.join(', ') || 'a bit more');
+          strengthText.style.color = '#ff9800';
+        } else if (strength < 100){
+          strengthFill.style.background = '#4caf50';
+          strengthText.textContent = 'Good – add ' + (feedback.join(', ') || 'a bit more');
+          strengthText.style.color = '#4caf50';
+        } else {
+          strengthFill.style.background = '#4caf50';
+          strengthText.textContent = 'Strong password!';
+          strengthText.style.color = '#4caf50';
+        }
+      }
+
+      function checkPasswordMatch(){
+        const p = passwordInput.value;
+        const c = confirmPasswordInput.value;
+        if (!c){ passwordMatch.textContent = ''; return; }
+        if (p === c){
+          passwordMatch.textContent = '✓ Passwords match';
+          passwordMatch.style.color = '#4caf50';
+        } else {
+          passwordMatch.textContent = '✗ Passwords do not match';
+          passwordMatch.style.color = '#f44336';
+        }
+      }
+
+      passwordInput.addEventListener('input', (e)=>{ updateStrengthUI(e.target.value); checkPasswordMatch(); });
+      confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+      // Email validation hint
+      const emailInput = document.getElementById('email');
+      emailInput.addEventListener('blur', function(){
+        const email = this.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) { this.style.borderColor = '#e0e0e0'; return; }
+        this.style.borderColor = emailRegex.test(email) ? '#4caf50' : '#f44336';
+      });
+
+      /* ===== Submit handling ===== */
+      const signupForm = document.getElementById('signupForm');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const buttonText = document.getElementById('buttonText');
+      const submitBtn = document.getElementById('submitBtn');
+
+      signupForm.addEventListener('submit', function(e){
+        if (passwordInput.value !== confirmPasswordInput.value){
+          e.preventDefault();
+          M.toast({html: 'Passwords do not match', classes:'red'});
+          return;
+        }
+        const { strength } = checkPasswordStrength(passwordInput.value);
+        if (strength < 50){
+          e.preventDefault();
+          M.toast({html: 'Please choose a stronger password', classes:'orange'});
+          return;
+        }
+
+        // Loading state
+        loadingSpinner.classList.add('active');
+        buttonText.style.display = 'none';
+        submitBtn.disabled = true;
+        signupForm.querySelectorAll('input, button').forEach(el => el.disabled = true);
+      });
+
+      // Focus & entry animation
+      emailInput.focus();
+      const container = document.querySelector('.signup-container');
+      container.style.transform = 'translateY(18px)';
+      container.style.opacity = '0';
+      setTimeout(()=>{
+        container.style.transition = 'all .6s ease';
+        container.style.transform = 'translateY(0)';
+        container.style.opacity = '1';
+      }, 60);
+    });
+  </script>
 </body>
 </html>

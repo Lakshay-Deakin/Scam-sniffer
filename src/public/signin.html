@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Sign In - ScamSniffer</title>
+
+  <!-- Materialize CSS -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Brand favicon -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23667eea'/%3E%3Cstop offset='1' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M32 6l18 6v13c0 13-8.3 24.4-18 28-9.7-3.6-18-15-18-28V12l18-6z'/%3E%3Cpath fill='white' d='M28 34l-6-6-4 4 10 10 16-16-4-4z'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#667eea"/>
+
+  <style>
+    :root{
+      --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --shadow-1: 0 8px 20px rgba(0,0,0,.18);
+      --shadow-2: 0 15px 35px rgba(0,0,0,.22);
+      --radius-xl: 20px;
+    }
+
+    html, body { height: 100%; }
+    body{
+      background: var(--gradient-1);
+      min-height: 100vh;
+      font-family: 'Roboto', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    /* Navbar & single mobile toggle */
+    .navbar-fixed{ z-index: 1000; }
+    .brand-logo{ font-weight: 700; letter-spacing: .2px; }
+
+    #nav-toggle{
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
+      left: calc(env(safe-area-inset-left, 0px) + 10px);
+      z-index: 2500;
+      width: 44px; height: 44px; border-radius: 10px;
+      display: none; align-items:center; justify-content:center;
+      background: rgba(33,150,243,.95); color:#fff;
+      box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    }
+    #nav-toggle .material-icons{ line-height:1; font-size: 26px; }
+    @media (max-width: 992px){
+      #nav-toggle{ display: inline-flex; }
+      /* prevent hamburger overlap with brand */
+      .brand-logo{ padding-left: 52px; }
+    }
+
+    .sidenav{ z-index: 2000; padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+    .sidenav .user-view{ padding-top: 12px; background: rgba(0,0,0,0.22); }
+    .sidenav .user-view .name, .sidenav .user-view .email{
+      color:#fff !important; text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    }
+
+    main{ padding: 24px 12px 40px; }
+
+    /* ---------- Button icon centering fix ---------- */
+    .btn, .btn-large, .btn-small{
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      line-height: 1 !important;
+      text-transform: none;
+    }
+    .btn-large{ min-height: 52px; padding: 0 22px; }
+
+    /* Inner wrapper so icon + label are one flex unit */
+    .btn .btn-content,
+    .btn-large .btn-content,
+    .btn-small .btn-content{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Neutralize Materialize's float helpers inside buttons */
+    .btn i.left, .btn i.right,
+    .btn-large i.left, .btn-large i.right{
+      float: none !important;
+      margin: 0 !important;
+    }
+
+    /* Perfect centering for material icons in buttons */
+    .btn i.material-icons,
+    .btn-large i.material-icons,
+    .btn-small i.material-icons{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      line-height: 1;
+      height: 1em;
+      width: 1em;
+      vertical-align: middle;
+    }
+
+    .btn-custom{
+      background: var(--gradient-1);
+      color:#fff; border: 0; border-radius: 999px; padding: 12px 28px; font-weight:700;
+      box-shadow: var(--shadow-1);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-custom:hover{ transform: translateY(-2px); box-shadow: var(--shadow-2); }
+    .btn-outline{
+      color:#667eea; border: 2px solid #667eea; border-radius: 999px; padding: 10px 20px; font-weight:700; background:#fff;
+      transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-outline:hover{ background:#667eea; color:#fff; transform: translateY(-2px); box-shadow: var(--shadow-1); }
+    .btn-orange{
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color:#fff; border-radius: 999px; padding: 12px 20px; font-weight:700; border:0;
+      box-shadow: var(--shadow-1);
+    }
+
+    /* Floating background */
+    .floating-elements{
+      position: fixed; inset:0; pointer-events:none; z-index:-1;
+    }
+    .floating-elements::before,
+    .floating-elements::after{
+      content:""; position:absolute; border-radius:50%;
+      background: rgba(255,255,255,.12); animation: float 6s ease-in-out infinite;
+    }
+    .floating-elements::before{ width: 100px; height:100px; top:10%; right:-20px; }
+    .floating-elements::after { width: 60px; height:60px; bottom:20%; left:-30px; animation-delay: 3s; }
+    @keyframes float{ 0%,100%{ transform: translateY(0) rotate(0) } 50%{ transform: translateY(-20px) rotate(10deg) } }
+
+    /* Card */
+    .signin-container{
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl);
+      padding: 40px 34px;
+      box-shadow: var(--shadow-2);
+      width: clamp(320px, 90vw, 460px);
+      margin: 24px auto 48px;
+      position: relative; overflow: hidden;
+    }
+    .signin-container::before{
+      content:""; position:absolute; inset:0 0 auto 0; height:5px; background: var(--gradient-1);
+    }
+
+    .brand-section{ text-align:center; margin-bottom: 14px; }
+    .brand-icon{ font-size: 3.2rem; color:#667eea; margin-bottom: 6px; }
+    .brand-title{ margin:0; font-weight:700; letter-spacing:.2px; font-size: clamp(1.6rem, 4.6vw, 2.2rem); color:#333; }
+    .brand-subtitle{ color:#666; margin:6px 0 18px; font-size: clamp(.98rem, 2.6vw, 1.1rem); }
+
+    .welcome-message{
+      background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+      border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align:center;
+      border: 1px solid rgba(102,126,234,.2);
+    }
+
+    .input-field{ position: relative; margin-bottom: 16px; }
+    .input-field label{ color:#666; font-size:.92rem; margin-bottom: 8px; display:block; font-weight:600; }
+    .input-field input{
+      width:100%; border:2px solid #e0e0e0; border-radius: 12px;
+      padding: 14px 46px 14px 14px; font-size:1rem; background:#fff;
+      transition: border-color .25s ease, box-shadow .25s ease;
+    }
+    .input-field input:focus{ border-color:#667eea; outline:none; box-shadow: 0 0 0 3px rgba(102,126,234,.12); }
+    .input-field input.invalid{ border-color:#f44336; box-shadow: 0 0 0 3px rgba(244,67,54,.12); }
+    .input-field input.valid{ border-color:#4caf50; box-shadow: 0 0 0 3px rgba(76,175,80,.12); }
+    .prefix-icon{
+      position:absolute; right: 12px; top: 50%;
+      transform: translateY(-50%); /* center input icons perfectly */
+      color:#667eea; font-size: 1.2rem; pointer-events:none;
+    }
+
+    .remember-forgot{
+      display:flex; justify-content:space-between; align-items:center; margin: 10px 0 18px; font-size:.92rem; color:#666;
+    }
+    .forgot-link{ color:#667eea; text-decoration:none; }
+    .forgot-link:hover{ color:#764ba2; text-decoration:underline; }
+
+    .signin-btn{ width:100%; }
+    .signin-btn:disabled{ background:#ccc; box-shadow:none; cursor:not-allowed; }
+
+    .divider{ text-align:center; margin: 18px 0; position:relative; }
+    .divider::before{ content:""; position:absolute; inset: 50% 0 auto 0; height:1px; background:#e0e0e0; }
+    .divider span{ position:relative; background: rgba(255,255,255,.96); padding: 0 14px; color:#666; font-weight:600; }
+
+    .signup-link{ text-align:center; margin-top: 6px; }
+
+    /* Alerts: hidden by default */
+    .error-message,
+    .success-message{
+      display: none;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size:.95rem;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-message{ background:#ffebee; color:#c62828; border:1px solid #ffcdd2; }
+    .success-message{ background:#e8f5e8; color:#2e7d32; border:1px solid #c8e6c8; }
+
+    /* Spinner animation */
+    .loading i{ animation: spin 1s linear infinite; }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    @media (max-width: 600px){
+      .signin-container{ padding: 28px 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *,*::before,*::after{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-elements" aria-hidden="true"></div>
+
+  <!-- Single mobile toggle -->
+  <a href="#" id="nav-toggle" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false">
+    <i class="material-icons">menu</i>
+  </a>
+
+  <!-- Navbar -->
+  <div class="navbar-fixed" role="navigation">
+    <nav class="blue darken-2">
+      <div class="nav-wrapper container">
+        <a href="/index.html" class="brand-logo" aria-label="ScamSniffer Home">
+          <i class="material-icons left" aria-hidden="true">security</i>ScamSniffer
+        </a>
+        <ul class="right hide-on-med-and-down">
+          <li><a href="/index.html#home">Home</a></li>
+          <li><a href="/signup">Sign Up</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Mobile Sidenav -->
+  <ul class="sidenav" id="mobile-nav">
+    <li>
+      <div class="user-view blue darken-2 white-text">
+        <div class="background"></div>
+        <span class="name">ScamSniffer</span>
+        <span class="email">Secure your digital life</span>
+      </div>
+    </li>
+    <li><a href="/index.html"><i class="material-icons">home</i>Home</a></li>
+    <li><a href="/signup"><i class="material-icons">person_add</i>Sign Up</a></li>
+  </ul>
+
+  <main>
+    <div class="signin-container" role="main" aria-labelledby="title">
+      <div class="brand-section">
+        <i class="material-icons brand-icon" aria-hidden="true">security</i>
+        <h1 class="brand-title" id="title">ScamSniffer</h1>
+        <p class="brand-subtitle">Secure your digital life</p>
+      </div>
+
+      <div class="welcome-message">
+        <h5 style="margin:0 0 6px; color:#333;">Welcome Back!</h5>
+        <p style="margin:0; color:#666; font-size:.95rem;">Sign in to access advanced scam protection features</p>
+      </div>
+
+      <!-- Alerts (hidden by default) -->
+      <div class="error-message" id="errorMessage" role="alert" aria-live="assertive">
+        <i class="material-icons" aria-hidden="true">error</i>
+        <span id="errorText">An error occurred</span>
+      </div>
+      <div class="success-message" id="successMessage" role="alert" aria-live="polite">
+        <i class="material-icons" aria-hidden="true">check_circle</i>
+        <span id="successText">Success!</span>
+      </div>
+
+      <!-- Form (handled via JS to control alerts) -->
+      <form action="/login" method="POST" id="signinForm" novalidate>
+        <div class="input-field">
+          <label for="email">Email Address</label>
+          <input type="email" name="email" id="email" required inputmode="email" autocomplete="email">
+          <i class="material-icons prefix-icon" aria-hidden="true">email</i>
+        </div>
+
+        <div class="input-field">
+          <label for="password">Password</label>
+          <input type="password" name="password" id="password" required minlength="6" autocomplete="current-password">
+          <i class="material-icons prefix-icon" aria-hidden="true">lock</i>
+        </div>
+
+        <div class="remember-forgot">
+          <label class="checkbox-field" for="rememberMe" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="rememberMe">
+            <span>Remember me</span>
+          </label>
+          <a href="#" class="forgot-link" onclick="showForgotPassword()">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-large btn-custom signin-btn" id="submitBtn">
+          <span class="loading" id="loadingSpinner" style="display:none;">
+            <i class="material-icons" aria-hidden="true">refresh</i>
+          </span>
+          <span id="buttonText" class="btn-content">
+            <i class="material-icons" aria-hidden="true">login</i>
+            <span>Sign In</span>
+          </span>
+        </button>
+      </form>
+
+      <div class="divider"><span>Don't have an account?</span></div>
+      <div class="signup-link">
+        <a href="/signup" class="btn-outline">
+          <span class="btn-content">
+            <i class="material-icons" aria-hidden="true">person_add</i>
+            <span>Create New Account</span>
+          </span>
+        </a>
+      </div>
+
+      <div class="divider"><span>Or try without signing up</span></div>
+      <div class="signup-link">
+        <a href="/get/analyser" class="btn btn-orange">
+          <span class="btn-content">
+            <i class="material-icons" aria-hidden="true">search</i>
+            <span>Direct Analyzer Access</span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <script>
+    /* Navbar: single hamburger + icon flip + close on link tap */
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidenavEl = document.getElementById('mobile-nav');
+      const navToggle = document.getElementById('nav-toggle');
+      const toggleIcon = navToggle.querySelector('.material-icons');
+
+      function syncToggleIcon(isOpen) {
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+        toggleIcon.textContent = isOpen ? 'close' : 'menu';
+      }
+
+      const sidenavInstance = M.Sidenav.init(sidenavEl, {
+        edge: 'left',
+        draggable: true,
+        onOpenEnd: () => syncToggleIcon(true),
+        onCloseEnd: () => syncToggleIcon(false)
+      });
+
+      navToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        sidenavInstance.isOpen ? sidenavInstance.close() : sidenavInstance.open();
+      });
+
+      document.querySelectorAll('#mobile-nav a').forEach(link => {
+        link.addEventListener('click', () => { if (sidenavInstance.isOpen) sidenavInstance.close(); });
+      });
+
+      syncToggleIcon(false);
+    });
+
+    // ---- Sign-in logic aligned with your app.post('/login') ----
+    document.addEventListener('DOMContentLoaded', function(){
+      const signinForm = document.getElementById('signinForm');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const submitBtn = document.getElementById('submitBtn');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const buttonText = document.getElementById('buttonText');
+
+      const errorMessage = document.getElementById('errorMessage');
+      const successMessage = document.getElementById('successMessage');
+      const errorText = document.getElementById('errorText');
+      const successText = document.getElementById('successText');
+
+      // Keep alerts hidden until submit
+      function showError(msg){
+        errorText.textContent = msg;
+        errorMessage.style.display = 'flex';
+        successMessage.style.display = 'none';
+      }
+      function showSuccess(msg){
+        successText.textContent = msg;
+        successMessage.style.display = 'flex';
+        errorMessage.style.display = 'none';
+      }
+      function hideAlerts(){
+        errorMessage.style.display = 'none';
+        successMessage.style.display = 'none';
+      }
+
+      function setLoading(on){
+        loadingSpinner.style.display = on ? 'inline-flex' : 'none';
+        buttonText.style.display = on ? 'none' : 'inline-flex';
+        submitBtn.disabled = on;
+      }
+
+      function validateEmail(email){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+      function validateForm(){
+        hideAlerts(); // alerts only from submit path
+        let ok = true;
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!email || !validateEmail(email)){
+          emailInput.classList.add('invalid');
+          showError('Please enter a valid email');
+          ok = false;
+        } else {
+          emailInput.classList.remove('invalid');
+          emailInput.classList.add('valid');
+        }
+
+        if (!password || password.length < 6){
+          passwordInput.classList.add('invalid');
+          if (ok) showError('Password must be at least 6 characters');
+          ok = false;
+        } else {
+          passwordInput.classList.remove('invalid');
+          passwordInput.classList.add('valid');
+        }
+
+        return ok;
+      }
+
+      // Gentle field feedback without showing alerts
+      emailInput.addEventListener('blur', function(){
+        const v = this.value.trim();
+        if (!v) return;
+        if (validateEmail(v)){ this.classList.remove('invalid'); this.classList.add('valid'); }
+        else { this.classList.add('invalid'); this.classList.remove('valid'); }
+      });
+      passwordInput.addEventListener('input', function(){
+        if (!this.value) return;
+        if (this.value.length >= 6){ this.classList.remove('invalid'); this.classList.add('valid'); }
+        else { this.classList.add('invalid'); this.classList.remove('valid'); }
+      });
+
+      signinForm.addEventListener('submit', async function(e){
+        e.preventDefault();
+        hideAlerts();
+        if (!validateForm()) return;
+
+        setLoading(true);
+        try{
+          const body = new URLSearchParams({ email: emailInput.value.trim(), password: passwordInput.value });
+          const resp = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString(),
+            redirect: 'follow',
+            credentials: 'same-origin'
+          });
+
+          // Express redirect to /analyse.html
+          if (resp.redirected && resp.url.includes('/analyse.html')) {
+            window.location.href = resp.url;
+            return;
+          }
+
+          const text = (await resp.text()).trim();
+
+          // Server plain text errors
+          if (/User not found/i.test(text) || /Invalid password/i.test(text) || /Error logging in/i.test(text)) {
+            showError(text);
+            setLoading(false);
+            return;
+          }
+
+          // If server returned the HTML directly
+          if (resp.ok && text.startsWith('<!DOCTYPE')) {
+            window.location.href = '/analyse.html';
+            return;
+          }
+
+          showError('Unexpected response. Please try again.');
+          setLoading(false);
+        } catch(err){
+          showError('Network error. Please try again.');
+          setLoading(false);
+        }
+      });
+
+      // Remember me
+      const rememberCheckbox = document.getElementById('rememberMe');
+      const rememberedEmail = localStorage.getItem('rememberedEmail');
+      if (rememberedEmail){ emailInput.value = rememberedEmail; rememberCheckbox.checked = true; passwordInput.focus(); }
+      rememberCheckbox.addEventListener('change', function(){
+        if (this.checked && emailInput.value){ localStorage.setItem('rememberedEmail', emailInput.value); }
+        else { localStorage.removeItem('rememberedEmail'); }
+      });
+
+      // Keyboard shortcuts
+      emailInput.focus();
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') window.location.href = '/index.html';
+        if (e.ctrlKey && e.key === 'Enter') signinForm.dispatchEvent(new Event('submit'));
+      });
+
+      // Entry animation
+      const container = document.querySelector('.signin-container');
+      container.style.transform = 'translateY(18px)'; container.style.opacity = '0';
+      setTimeout(()=>{ container.style.transition='all .6s ease'; container.style.transform='translateY(0)'; container.style.opacity='1'; }, 60);
+    });
+
+    function showForgotPassword(){
+      alert('Forgot password functionality coming soon!\n\nFor now, please contact support or create a new account.');
+    }
+  </script>
+</body>
+</html>

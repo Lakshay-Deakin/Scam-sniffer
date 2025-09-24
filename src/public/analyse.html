@@ -1,63 +1,617 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Scam Sniffer</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>ScamSniffer - Real-Time Analysis</title>
+
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23667eea'/%3E%3Cstop offset='1' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M32 6l18 6v13c0 13-8.3 24.4-18 28-9.7-3.6-18-15-18-28V12l18-6z'/%3E%3Cpath fill='white' d='M28 34l-6-6-4 4 10 10 16-16-4-4z'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#667eea"/>
+
   <style>
-    body { font-family: Arial; margin:2rem; }
-    textarea { width:100%; height:150px; }
-    .result { margin-top:20px; padding:10px; border:1px solid #ccc; }
+    :root{
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --danger-color: #f44336; --warning-color:#ff9800; --success-color:#4caf50;
+      --shadow-light: 0 2px 10px rgba(0,0,0,0.1);
+      --shadow-medium: 0 8px 25px rgba(0,0,0,0.15);
+      --shadow-heavy: 0 15px 35px rgba(0,0,0,0.2);
+      --radius-xl: 20px;
+    }
+    html, body { height: 100%; }
+    body{ background: var(--primary-gradient); min-height:100vh; font-family:'Roboto',sans-serif; margin:0; overflow-x:hidden; }
+
+    .navbar-fixed{ z-index:1000; }
+    .brand-logo{ font-weight:700; letter-spacing:.2px; }
+
+    #nav-toggle{
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: calc(env(safe-area-inset-left, 0px) + 10px);
+      z-index: 2500; width:44px; height:44px; border-radius:10px; display:none; align-items:center; justify-content:center;
+      background: rgba(33,150,243,.95); color:#fff; box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    }
+    #nav-toggle .material-icons{ font-size:26px; line-height:1; }
+    @media (max-width: 992px){ #nav-toggle{ display:inline-flex; } }
+
+    .sidenav{ z-index:2000; padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+    .sidenav .user-view{ padding-top:12px; background: rgba(0,0,0,.22); }
+    .sidenav .user-view .name, .sidenav .user-view .email{ color:#fff !important; text-shadow:0 1px 2px rgba(0,0,0,.35); }
+
+    .user-info{ display:flex; align-items:center; gap:10px; color:white; }
+    .user-email{ font-size:14px; opacity:.9; margin-right:10px; }
+
+    .main-container{ padding:24px 0 40px; min-height: calc(100vh - 64px); }
+
+    .btn, .btn-large, .btn-small{ display:inline-flex !important; align-items:center; justify-content:center; gap:8px; text-transform:none; line-height:1.2 !important; }
+
+    .analysis-card{ background:rgba(255,255,255,.98); backdrop-filter: blur(10px); border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-heavy); padding:32px; margin-bottom:30px; transition: transform .25s, box-shadow .25s; }
+    .analysis-card:hover{ transform: translateY(-4px); box-shadow:0 20px 45px rgba(0,0,0,.25); }
+
+    .stats-banner{ background: rgba(255,255,255,.95); backdrop-filter: blur(10px); border-radius:15px; padding:16px 20px; margin-bottom:22px;
+      box-shadow: var(--shadow-medium); display:flex; align-items:center; justify-content: space-between; }
+    .user-count{ display:flex; align-items:center; color:#667eea; font-weight:700; }
+    .user-count i{ margin-right:8px; animation:pulse 2s infinite; }
+    .live-indicator{ background:#4caf50; color:#fff; padding:8px 14px; border-radius:20px; font-weight:600; display:flex; align-items:center; font-size:.9rem; }
+    .live-indicator::before{ content:""; width:8px; height:8px; background:#fff; border-radius:50%; margin-right:8px; animation: blink 1.5s infinite; }
+
+    .section-header{ display:flex; align-items:center; margin-bottom:18px; }
+    .section-header i{ font-size:2.2rem; color:#667eea; margin-right:12px; }
+    .section-header h4{ margin:0; color:#333; font-weight:600; }
+
+    .textarea-container{ position:relative; margin-bottom:16px; }
+    #text{ width:100%; min-height:200px; resize:vertical; padding:18px; border:2px solid #e0e0e0; border-radius:15px; font-size:1rem; line-height:1.55;
+      background: rgba(248,249,250,.85); transition: border-color .25s, box-shadow .25s, background .25s; }
+    #text:focus{ outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.12); background:#fff; }
+    .textarea-info{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:.92rem; color:#666; }
+    .typing-indicator{ display:none; color:#667eea; font-weight:600; }
+    .typing-indicator.active{ display:flex; align-items:center; }
+    .typing-indicator i{ margin-right:6px; animation: spin 1s linear infinite; }
+    .char-count{ font-weight:600; }
+
+    .result-container{ display:none; margin-top:18px; }
+    .result-container.show{ display:block; animation: slideUp .45s ease-out; }
+
+    .risk-indicator{ text-align:center; padding:28px 16px; border-radius:18px; margin-bottom:16px; position:relative; overflow:hidden; }
+    .risk-indicator::before{ content:""; position:absolute; inset:0; background:inherit; filter: blur(10px); z-index:-1; }
+    .risk-high{ background: linear-gradient(135deg,#ff5722 0%,#f44336 100%); color:#fff; }
+    .risk-medium{ background: linear-gradient(135deg,#ff9800 0%,#f57c00 100%); color:#fff; }
+    .risk-low{ background: linear-gradient(135deg,#4caf50 0%,#388e3c 100%); color:#fff; }
+    .risk-score{ font-size:3rem; font-weight:800; margin:8px 0; text-shadow:2px 2px 4px rgba(0,0,0,.25); }
+    .risk-level{ font-size:1.25rem; font-weight:700; }
+
+    .indicators-section{ background: rgba(248,249,250,.9); backdrop-filter: blur(10px); border-radius:15px; padding:22px; margin-top:12px; }
+    .indicators-title{ display:flex; align-items:center; gap:8px; margin:0 0 12px; color:#333; }
+    .indicators-title i{ color:#667eea; }
+    .indicator-item{ background:#fff; border-radius:10px; padding:12px 16px; margin-bottom:10px; border-left:4px solid #667eea; box-shadow: var(--shadow-light);
+      transition: transform .2s, box-shadow .2s; display:flex; align-items:flex-start; gap:10px; }
+    .indicator-item:hover{ transform: translateX(4px); box-shadow: var(--shadow-medium); }
+    .indicator-item:last-child{ margin-bottom:0; }
+
+    .quick-actions{ background: rgba(255,255,255,.96); backdrop-filter: blur(10px); border-radius:15px; padding:20px; box-shadow: var(--shadow-medium); }
+    .action-btn{ width:100%; margin-bottom:12px; border-radius:12px; padding:12px; font-weight:600; position:relative; }
+    .action-btn:disabled{ opacity:.6; cursor:not-allowed; }
+    .action-btn .tooltip-text{ visibility:hidden; width:180px; background:#333; color:#fff; text-align:center; border-radius:6px; padding:5px; position:absolute; z-index:1; bottom:125%; left:50%; margin-left:-90px; opacity:0; transition:opacity .3s; font-size:12px; }
+    .action-btn:disabled:hover .tooltip-text{ visibility:visible; opacity:1; }
+
+    .tips-section{ background: linear-gradient(135deg,#e3f2fd 0%,#f3e5f5 100%); border-radius:15px; padding:20px; margin-top:16px; border:1px solid rgba(102,126,234,.2); }
+    .tips-title{ display:flex; align-items:center; gap:8px; margin:0 0 10px; color:#333; }
+    .tip-item{ display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; font-size:.95rem; }
+    .tip-item i{ color:#4caf50; font-size:1rem; margin-top:2px; }
+
+    .threats-section{ background: linear-gradient(135deg,#ffebee 0%,#fce4ec 100%); border-radius:15px; padding:20px; margin-top:16px; border:1px solid rgba(244,67,54,.2); }
+    .threats-title{ display:flex; align-items:center; gap:8px; margin:0 0 16px; color:#333; font-size:18px; font-weight:600; }
+    .threat-item{ display:flex; align-items:center; margin-bottom:12px; padding:8px 0; }
+    .threat-badge{ min-width:85px; text-align:center; font-size:11px; padding:4px 8px; }
+    .threat-description{ flex:1; margin-left:12px; color:#333; font-size:14px; }
+    .threat-percentage{ font-weight:700; color:#666; font-size:14px; margin-left:auto; padding-left:12px; }
+
+    .recent-analyses{ background: rgba(255,255,255,.96); backdrop-filter: blur(10px); border-radius:15px; padding:20px; margin-top:16px; box-shadow: var(--shadow-medium); }
+    .analysis-history-item{ display:flex; align-items:center; gap:12px; padding:12px; margin-bottom:8px; background: rgba(248,249,250,.6); border-radius:10px; font-size:.9rem; cursor:pointer; transition: background .2s; }
+    .analysis-history-item:hover{ background: rgba(248,249,250,.9); }
+    .history-risk-indicator{ width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .history-risk-high{ background: var(--danger-color); }
+    .history-risk-medium{ background: var(--warning-color); }
+    .history-risk-low{ background: var(--success-color); }
+
+    .login-prompt{ background: linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%); border:1px solid #ff9800; border-radius:12px; padding:16px; margin-bottom:20px; display:none; align-items:center; gap:12px; }
+    .login-prompt i{ color:#ff9800; font-size:24px; }
+    .login-prompt h6{ margin:0 0 4px 0; color:#333; font-weight:600; }
+    .login-prompt p{ margin:0; font-size:14px; color:#666; }
+
+    .floating-elements{ position:fixed; inset:0; pointer-events:none; z-index:-1; }
+    .floating-elements::before,.floating-elements::after{ content:""; position:absolute; border-radius:50%; background: rgba(255,255,255,.1); animation: float 8s ease-in-out infinite; }
+    .floating-elements::before{ width:200px; height:200px; top:10%; right:-100px; }
+    .floating-elements::after{ width:150px; height:150px; bottom:20%; left:-75px; animation-delay:4s; }
+
+    @keyframes pulse{ 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:.7} }
+    @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes spin{ to{ transform:rotate(360deg) } }
+    @keyframes slideUp{ from{opacity:0; transform:translateY(24px)} to{opacity:1; transform:none} }
+    @keyframes float{ 0%,100%{ transform:translateY(0) rotate(0) } 50%{ transform:translateY(-30px) rotate(10deg) } }
+
+    @media (max-width:768px){
+      .analysis-card{ padding:22px; margin:10px; }
+      .stats-banner{ flex-direction:column; gap:12px; text-align:center; }
+      .section-header{ flex-direction:column; text-align:center; }
+      .section-header i{ margin:0 0 8px 0; }
+      .threat-item{ font-size:12px; }
+      .threat-badge{ min-width:70px; font-size:10px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Scam Sniffer</h1>
-  <p id="userCount">Active users: 0</p>
-  
-  <textarea id="text" placeholder="Paste your message here..."></textarea>
-  <div id="result" class="result" style="display:none;"></div>
+  <div class="floating-elements" aria-hidden="true"></div>
 
+  <!-- Single mobile toggle -->
+  <a href="#" id="nav-toggle" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false">
+    <i class="material-icons">menu</i>
+  </a>
+
+  <!-- Navbar -->
+  <div class="navbar-fixed" role="navigation">
+    <nav class="blue darken-2">
+      <div class="nav-wrapper container">
+        <a href="/index.html" class="brand-logo" aria-label="ScamSniffer Home">
+          <i class="material-icons left" aria-hidden="true">security</i>ScamSniffer
+        </a>
+        <ul class="right hide-on-med-and-down" id="navAuthSection">
+          <li><a href="/index.html">Home</a></li>
+          <!-- Auth links injected by JS -->
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Mobile Sidenav -->
+  <ul class="sidenav" id="mobile-nav">
+    <li>
+      <div class="user-view blue darken-2 white-text">
+        <div class="background"></div>
+        <span class="name">ScamSniffer</span>
+        <span class="email" id="mobileUserEmail">Real-time Protection</span>
+      </div>
+    </li>
+    <li><a href="/index.html"><i class="material-icons">home</i>Home</a></li>
+    <li id="mobileAuthLinks"><!-- Injected by JS --></li>
+  </ul>
+
+  <div class="main-container">
+    <div class="container">
+      <div class="stats-banner">
+        <div class="user-count" id="userCount">
+          <i class="material-icons">people</i><span>Active users: 0</span>
+        </div>
+        <div class="live-indicator">LIVE ANALYSIS</div>
+      </div>
+
+      <!-- Shown only when logged out -->
+      <div class="login-prompt" id="loginPrompt">
+        <i class="material-icons">info</i>
+        <div>
+          <h6>Want to save your analyses?</h6>
+          <p>Sign in to unlock history tracking, export features, and report scams</p>
+        </div>
+        <a href="/signin.html" class="btn-small waves-effect waves-light orange">
+          <i class="material-icons left">login</i>Sign In
+        </a>
+      </div>
+
+      <div class="row">
+        <!-- Main Panel -->
+        <div class="col s12 l8">
+          <div class="analysis-card">
+            <div class="section-header">
+              <i class="material-icons">search</i>
+              <div>
+                <h4>Real-Time Scam Analysis</h4>
+                <p style="margin:6px 0 0; color:#666;">Paste or type any suspicious message below for instant analysis</p>
+              </div>
+            </div>
+
+            <div class="textarea-container">
+              <textarea id="text" placeholder="Paste your suspicious message, email content, SMS, or any text here for real-time analysis..."></textarea>
+              <div class="textarea-info">
+                <div class="typing-indicator" id="typingIndicator">
+                  <i class="material-icons">refresh</i>Analyzing...
+                </div>
+                <div class="char-count" id="charCount">0 characters</div>
+              </div>
+            </div>
+
+            <!-- Results -->
+            <div class="result-container" id="result">
+              <div class="risk-indicator" id="riskIndicator">
+                <div class="risk-score" id="riskScore">--</div>
+                <div class="risk-level" id="riskLevel">Enter text to analyze</div>
+              </div>
+
+              <div class="indicators-section" id="indicatorsSection" style="display:none;">
+                <h5 class="indicators-title"><i class="material-icons">warning</i>Risk Indicators</h5>
+                <div id="indicators"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auth-only recent list -->
+          <div class="recent-analyses" id="recentAnalysesSection" style="display:none;">
+            <h5 style="margin-bottom:14px; color:#333;"><i class="material-icons left">history</i>Your Saved Analyses</h5>
+            <div id="recentAnalyses">
+              <p style="color:#666; text-align:center; padding:16px;">
+                <i class="material-icons">inbox</i><br/>No saved analyses yet. Click "Save Analysis" to store your results.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col s12 l4">
+          <div class="quick-actions">
+            <h5 style="margin-bottom:14px; color:#333;"><i class="material-icons left">flash_on</i>Quick Actions</h5>
+
+            <button class="btn action-btn blue" id="clearBtn">
+              <i class="material-icons left">clear</i>Clear Text
+            </button>
+
+            <!-- Enabled on login (even before you have a result) -->
+            <button class="btn action-btn green" id="saveBtn" disabled>
+              <i class="material-icons left">save</i>Save Analysis
+              <span class="tooltip-text">Sign in to save</span>
+            </button>
+
+            <!-- Enabled automatically when analysis level is Medium/High -->
+            <button class="btn action-btn orange" id="reportBtn" disabled>
+              <i class="material-icons left">report</i>Report Scam
+              <span class="tooltip-text">Analyze text first</span>
+            </button>
+
+            <!-- Enabled on login; toast if nothing to export yet -->
+            <button class="btn action-btn purple" id="exportBtn" disabled>
+              <i class="material-icons left">file_download</i>Export History
+              <span class="tooltip-text">Sign in to export</span>
+            </button>
+          </div>
+
+          <div class="tips-section">
+            <h5 class="tips-title"><i class="material-icons">tips_and_updates</i>Analysis Tips</h5>
+            <div class="tip-item"><i class="material-icons">check_circle</i><span>Copy the entire message content for better accuracy</span></div>
+            <div class="tip-item"><i class="material-icons">check_circle</i><span>Include email headers if analyzing email content</span></div>
+            <div class="tip-item"><i class="material-icons">check_circle</i><span>Don't click suspicious links - paste them instead</span></div>
+            <div class="tip-item"><i class="material-icons">check_circle</i><span>Analysis is performed in real-time as you type</span></div>
+          </div>
+
+          <div class="threats-section">
+            <h5 class="threats-title"><i class="material-icons" style="color:#f44336;">warning</i>Current Threats</h5>
+            <div class="threat-item">
+              <span class="chip red white-text threat-badge">High Alert</span>
+              <span class="threat-description">Crypto investment scams</span>
+              <span class="threat-percentage">↗️ 45%</span>
+            </div>
+            <div class="threat-item">
+              <span class="chip orange white-text threat-badge">Medium</span>
+              <span class="threat-description">Fake banking SMS</span>
+              <span class="threat-percentage">↗️ 23%</span>
+            </div>
+            <div class="threat-item">
+              <span class="chip red white-text threat-badge">High Alert</span>
+              <span class="threat-description">Tech support scams</span>
+              <span class="threat-percentage">↗️ 67%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Scam Modal -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <h4><i class="material-icons">report</i>Report a Scam</h4>
+      <p>Help protect others by reporting this scam. Your report will be reviewed and added to our threat database.</p>
+      <div class="input-field">
+        <h6>Select Scam Type:</h6>
+        <div class="scam-type-chips">
+          <span class="chip selectable" data-type="phishing">Phishing</span>
+          <span class="chip selectable" data-type="investment">Investment Fraud</span>
+          <span class="chip selectable" data-type="romance">Romance Scam</span>
+          <span class="chip selectable" data-type="tech-support">Tech Support</span>
+          <span class="chip selectable" data-type="lottery">Lottery/Prize</span>
+          <span class="chip selectable" data-type="impersonation">Impersonation</span>
+          <span class="chip selectable" data-type="other">Other</span>
+        </div>
+      </div>
+      <div class="input-field">
+        <textarea id="reportDetails" class="materialize-textarea" placeholder="Additional details about the scam (optional)"></textarea>
+        <label for="reportDetails">Additional Details</label>
+      </div>
+      <div class="input-field">
+        <p>
+          <label><input type="checkbox" id="shareAnonymously" checked /><span>Share anonymously with the community</span></label>
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+      <a href="#!" id="submitReportBtn" class="waves-effect waves-green btn orange">Submit Report</a>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
   <script>
+    let isAuthenticated = false, userEmail = null;
+    let savedAnalyses = [], currentAnalysis = null;
+
+    // Pending window to ignore broadcast results we didn't trigger
+    let hasPending = false, pendingTimer = null;
+    function armPendingWindow(ms=15000){ hasPending = true; clearTimeout(pendingTimer); pendingTimer = setTimeout(()=>{ hasPending=false; }, ms); }
+    function clearPendingWindow(){ hasPending = false; clearTimeout(pendingTimer); pendingTimer = null; }
+
     const socket = io("http://localhost:5000");
 
     const userCountDiv = document.getElementById("userCount");
     const textarea = document.getElementById("text");
     const resultDiv = document.getElementById("result");
+    const riskIndicator = document.getElementById("riskIndicator");
+    const riskScore = document.getElementById("riskScore");
+    const riskLevel = document.getElementById("riskLevel");
+    const indicatorsSection = document.getElementById("indicatorsSection");
+    const indicatorsDiv = document.getElementById("indicators");
+    const typingIndicator = document.getElementById("typingIndicator");
+    const charCount = document.getElementById("charCount");
+    const saveBtn = document.getElementById("saveBtn");
+    const reportBtn = document.getElementById("reportBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const clearBtn = document.getElementById("clearBtn");
 
-    // Show active users
+    // Navbar / Sidenav + Modal
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidenavEl = document.getElementById('mobile-nav');
+      const navToggle = document.getElementById('nav-toggle');
+      const toggleIcon = navToggle.querySelector('.material-icons');
+
+      function syncToggleIcon(isOpen){ navToggle.setAttribute('aria-expanded', String(isOpen)); toggleIcon.textContent = isOpen ? 'close':'menu'; }
+
+      const sidenavInstance = M.Sidenav.init(sidenavEl, {
+        edge:'left', draggable:true,
+        onOpenEnd:()=>syncToggleIcon(true),
+        onCloseEnd:()=>syncToggleIcon(false)
+      });
+
+      navToggle.addEventListener('click', (e)=>{ e.preventDefault(); sidenavInstance.isOpen? sidenavInstance.close(): sidenavInstance.open(); });
+      document.querySelectorAll('#mobile-nav a').forEach(a=> a.addEventListener('click', ()=> sidenavInstance.close()));
+
+      M.Modal.init(document.querySelectorAll('.modal'));
+      syncToggleIcon(false);
+    });
+
+    // Auth
+    async function checkAuth(){
+      try{
+        const r = await fetch('/api/auth/check', {credentials:'include'});
+        if(r.ok){
+          const d = await r.json();
+          isAuthenticated = !!d.authenticated; userEmail = d.email || null;
+        }else{ isAuthenticated=false; userEmail=null; }
+      }catch{ isAuthenticated=false; userEmail=null; }
+      updateUIForAuth();
+    }
+
+    function updateUIForAuth(){
+      const navAuthSection = document.getElementById('navAuthSection');
+      const mobileAuthLinks = document.getElementById('mobileAuthLinks');
+      const mobileUserEmail = document.getElementById('mobileUserEmail');
+      const loginPrompt = document.getElementById('loginPrompt');
+      const recentAnalysesSection = document.getElementById('recentAnalysesSection');
+
+      if(isAuthenticated){
+        loginPrompt.style.display='none';
+        recentAnalysesSection.style.display='block';
+
+        navAuthSection.innerHTML = `
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/history.html">History</a></li>
+          <li class="user-info">
+            <span class="user-email">${userEmail}</span>
+            <a href="/logout" class="btn-small red">Logout</a>
+          </li>`;
+
+        mobileAuthLinks.innerHTML = `
+          <li><a href="/history.html"><i class="material-icons">history</i>History</a></li>
+          <li><a href="/logout"><i class="material-icons">exit_to_app</i>Logout</a></li>`;
+        mobileUserEmail.textContent = userEmail;
+
+        // Enable Save & Export immediately after login
+        if (saveBtn.querySelector('.tooltip-text')) saveBtn.querySelector('.tooltip-text').remove();
+        if (exportBtn.querySelector('.tooltip-text')) exportBtn.querySelector('.tooltip-text').remove();
+        saveBtn.disabled = false;
+        exportBtn.disabled = false;
+
+        loadSavedAnalyses();
+      }else{
+        loginPrompt.style.display='flex';
+        recentAnalysesSection.style.display='none';
+
+        navAuthSection.innerHTML = `
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/signin.html">Sign In</a></li>`;
+        mobileAuthLinks.innerHTML = `<li><a href="/signin.html"><i class="material-icons">login</i>Sign In</a></li>`;
+        mobileUserEmail.textContent = 'Real-time Protection';
+
+        saveBtn.disabled = true;
+        exportBtn.disabled = true;
+      }
+    }
+
+    function loadSavedAnalyses(){
+      if(!isAuthenticated) return;
+      const key = `savedAnalyses_${userEmail}`;
+      savedAnalyses = JSON.parse(localStorage.getItem(key) || '[]');
+      updateRecentAnalyses();
+    }
+
+    function updateRecentAnalyses(){
+      const list = document.getElementById('recentAnalyses');
+      if(!isAuthenticated || savedAnalyses.length===0){
+        list.innerHTML = `<p style="color:#666; text-align:center; padding:16px;">
+          <i class="material-icons">inbox</i><br/>No saved analyses yet. Click "Save Analysis" to store your results.</p>`;
+        return;
+      }
+      list.innerHTML = savedAnalyses.slice(0,10).map(a => `
+        <div class="analysis-history-item" onclick="loadAnalysis('${a.id}')">
+          <div class="history-risk-indicator history-risk-${a.level.toLowerCase()}"></div>
+          <div style="flex:1;">
+            <div style="font-weight:600; margin-bottom:4px;">${a.level} Risk (${a.score}/100)</div>
+            <div style="color:#666; font-size:.82rem;">${a.text.substring(0,60).replace(/</g,'&lt;')}...</div>
+            <div style="color:#999; font-size:.75rem; margin-top:3px;">${new Date(a.savedAt).toLocaleString()}</div>
+          </div>
+        </div>`).join('');
+    }
+    function loadAnalysis(id){
+      const a = savedAnalyses.find(x=>x.id===id);
+      if(!a) return;
+      textarea.value = a.text; displayResult(a); updateCharCount(); M.toast({html:'Analysis loaded', classes:'blue'});
+    }
+    window.loadAnalysis = loadAnalysis;
+
+    // Socket events
     socket.on("userCount", count => {
-      userCountDiv.textContent = `Active users: ${count}`;
+      userCountDiv.innerHTML = `<i class="material-icons">people</i><span>Active users: ${count}</span>`;
     });
 
-    // Real-time analysis as user types
-    let timeout;
-    textarea.addEventListener("input", () => {
-      clearTimeout(timeout); // debounce
-      timeout = setTimeout(() => {
-        const text = textarea.value;
-        if (text.trim() === "") {
-          resultDiv.style.display = "none";
-          return;
-        }
-        socket.emit("analyzeText", text);
-      }, 300); // wait 300ms after last keystroke
-    });
-
-    // Receive analysis results
     socket.on("analysisResult", (data) => {
-      resultDiv.style.display = "block";
-      resultDiv.innerHTML = `
-        <p><strong>Score:</strong> ${data.score}/100</p>
-        <p><strong>Risk Level:</strong> ${data.level}</p>
-        <h3>Indicators:</h3>
-        <ul>${data.indicators.map(i => `<li>${i.description}</li>`).join('')}</ul>
-      `;
+      if (!hasPending || !textarea.value.trim()) return;   // ignore broadcasts we didn't request
+      clearPendingWindow();
+      hideTypingIndicator();
+      displayResult(data);
+      currentAnalysis = { ...data, text: textarea.value, timestamp: new Date() };
+
+      // Report becomes enabled for Medium/High
+      const canReport = (data.level === 'High' || data.level === 'Medium');
+      reportBtn.disabled = !canReport;
+      if (canReport) { const t = reportBtn.querySelector('.tooltip-text'); if (t) t.remove(); }
+      else if (!reportBtn.querySelector('.tooltip-text')) {
+        const t = document.createElement('span'); t.className='tooltip-text'; t.textContent='Analyze text first'; reportBtn.appendChild(t);
+      }
     });
 
-    // Optional: log all analyses (for admin view)
-    socket.on("newAnalysis", data => {
-      console.log("New analysis broadcast:", data);
+    // Input / analyze
+    let debounceTimer;
+    textarea.addEventListener("input", () => {
+      updateCharCount();
+      if (!textarea.value.trim()) {
+        hideResult(); hideTypingIndicator(); clearPendingWindow();
+        reportBtn.disabled = true;
+        return;
+      }
+      showTypingIndicator();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => { armPendingWindow(); socket.emit("analyzeText", textarea.value.trim()); }, 500);
     });
+
+    function updateCharCount(){
+      const n = textarea.value.length;
+      charCount.textContent = `${n} characters`;
+      charCount.style.color = n>1000 ? '#f44336' : n>500 ? '#ff9800' : '#666';
+    }
+    function showTypingIndicator(){ typingIndicator.classList.add('active'); }
+    function hideTypingIndicator(){ typingIndicator.classList.remove('active'); }
+
+    function displayResult(data){
+      resultDiv.classList.add('show');
+      riskScore.textContent = data.score ?? '--';
+      riskLevel.textContent = `${(data.level||'Low').toUpperCase()} RISK`;
+      riskIndicator.className = 'risk-indicator ' + (
+        data.level === 'High' ? 'risk-high' : data.level === 'Medium' ? 'risk-medium' : 'risk-low'
+      );
+
+      if(Array.isArray(data.indicators) && data.indicators.length){
+        indicatorsSection.style.display='block';
+        indicatorsDiv.innerHTML = data.indicators.map(ind => `
+          <div class="indicator-item">
+            <i class="material-icons ${data.level==='High'?'red-text':data.level==='Medium'?'orange-text':'green-text'}">
+              ${data.level==='High'?'warning':data.level==='Medium'?'info':'check_circle'}
+            </i>
+            <span>${ind.description || ind}</span>
+          </div>`).join('');
+      }else{
+        indicatorsSection.style.display='none';
+      }
+    }
+
+    function hideResult(){
+      resultDiv.classList.remove('show');
+      riskScore.textContent='--'; riskLevel.textContent='Enter text to analyze';
+      riskIndicator.className='risk-indicator'; indicatorsSection.style.display='none';
+    }
+
+    // Actions
+    clearBtn.addEventListener('click', () => {
+      textarea.value=''; hideResult(); hideTypingIndicator(); updateCharCount(); clearPendingWindow();
+      currentAnalysis=null; reportBtn.disabled=true;
+    });
+
+    saveBtn.addEventListener('click', () => {
+      if (!isAuthenticated){ M.toast({html:'Sign in to save analyses', classes:'orange'}); return; }
+      if (!currentAnalysis){ M.toast({html:'Analyze something first', classes:'orange'}); return; }
+      const key = `savedAnalyses_${userEmail}`;
+      const list = JSON.parse(localStorage.getItem(key) || '[]');
+      const entry = { ...currentAnalysis, id:String(Date.now()), savedAt:new Date().toISOString() };
+      list.unshift(entry); localStorage.setItem(key, JSON.stringify(list.slice(0,50)));
+      savedAnalyses = list; updateRecentAnalyses(); M.toast({html:'Analysis saved!', classes:'green'});
+    });
+
+    exportBtn.addEventListener('click', () => {
+      if (!isAuthenticated){ M.toast({html:'Sign in to export', classes:'orange'}); return; }
+      if (!savedAnalyses.length){ M.toast({html:'No saved analyses to export', classes:'red'}); return; }
+      const csvHeader = "Timestamp,Risk Level,Score,Text Preview,Indicators Count\n";
+      const rows = savedAnalyses.map(a => `"${a.savedAt}","${a.level}","${a.score}","${a.text.substring(0,50).replace(/"/g,'""')}...","${(a.indicators||[]).length}"`).join("\n");
+      const blob = new Blob([csvHeader + rows], {type:"text/csv;charset=utf-8;"}); const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href=url; link.download=`scamsniffer_analysis_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+      M.toast({html:'Exported history!', classes:'green'});
+    });
+
+    const reportModalEl = document.getElementById('reportModal');
+    document.getElementById('reportBtn').addEventListener('click', () => {
+      if(!currentAnalysis){ M.toast({html:'Analyze text first', classes:'orange'}); return; }
+      M.Modal.getInstance(reportModalEl).open();
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.chip.selectable').forEach(c => c.addEventListener('click', ()=> c.classList.toggle('selected')));
+      document.getElementById('submitReportBtn').addEventListener('click', submitReport);
+    });
+    function submitReport(){
+      if(!currentAnalysis) return;
+      const types = Array.from(document.querySelectorAll('.chip.selectable.selected')).map(c=>c.dataset.type);
+      const details = (document.getElementById('reportDetails').value||'').trim();
+      const anonymous = document.getElementById('shareAnonymously').checked;
+      console.log('Report submitted:', {types, details, anonymous, currentAnalysis});
+      M.toast({html:'Report submitted. Thank you!', classes:'orange'});
+      M.Modal.getInstance(reportModalEl).close();
+    }
+
+    // Typing helpers
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); if (textarea.value.trim()){ armPendingWindow(); socket.emit("analyzeText", textarea.value.trim()); } }
+      if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); textarea.value=''; hideResult(); updateCharCount(); }
+      if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveBtn.click(); }
+    });
+    textarea.addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.max(200, this.scrollHeight)+'px'; });
+
+    // Init
+    (function init(){
+      window.M = window.M || {};
+      if(!M.toast){
+        M.toast = (o)=>{ const t=document.createElement('div'); t.style.cssText=`position:fixed;top:80px;right:20px;background:${o.classes==='green'?'#4caf50':o.classes==='red'?'#f44336':o.classes==='orange'?'#ff9800':'#2196f3'};color:#fff;padding:15px 25px;border-radius:25px;z-index:10000;box-shadow:0 8px 25px rgba(0,0,0,.3);transform:translateX(100%);transition:transform .3s;max-width:320px;`; t.innerHTML=o.html; document.body.appendChild(t); setTimeout(()=>t.style.transform='translateX(0)',80); setTimeout(()=>{ t.style.transform='translateX(100%)'; setTimeout(()=>t.remove(),300); },3000); };
+      }
+      checkAuth();
+      textarea.focus();
+      document.getElementById('charCount').textContent = '0 characters';
+    })();
   </script>
 </body>
 </html>
