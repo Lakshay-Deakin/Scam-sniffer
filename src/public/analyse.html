@@ -779,6 +779,14 @@
               <i class="material-icons left">clear</i>Clear Text
             </button>
 
+            <button class="btn action-btn teal" id="importCsvBtn">
+              <i class="material-icons left">file_upload</i>Import CSV
+            </button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none" />
+
+
+
+
             <!-- Enabled on login (even before you have a result) -->
             <button class="btn action-btn green" id="saveBtn" disabled>
               <i class="material-icons left">save</i>Save Analysis
@@ -1177,6 +1185,104 @@
       textarea.focus();
       document.getElementById('charCount').textContent = '0 characters';
     })();
+    const importCsvBtn = document.getElementById("importCsvBtn");
+    const csvFileInput = document.getElementById("csvFileInput");
+
+    importCsvBtn.addEventListener("click", () => csvFileInput.click());
+
+    csvFileInput.addEventListener("change", handleCsvFile);
+
+    // Queue for storing CSV lines and results
+    window.csvMessagesQueue = [];
+    window.csvAnalysisResults = [];
+
+    function handleCsvFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const content = e.target.result;
+        parseCsv(content);
+      };
+      reader.readAsText(file);
+    }
+
+    function parseCsv(content) {
+      const lines = content.split(/\r?\n/).filter(l => l.trim() !== "");
+      if (!lines.length) {
+        M.toast({ html: "CSV is empty", classes: "red" });
+        return;
+      }
+
+      M.toast({ html: `CSV loaded: ${lines.length} messages, analyzing...`, classes: "blue" });
+
+      // Reset queue and results
+      window.csvMessagesQueue = lines;
+      window.csvAnalysisResults = [];
+
+      analyzeNextCsvMessage();
+    }
+
+    function analyzeNextCsvMessage() {
+      if (!window.csvMessagesQueue.length) {
+        M.toast({ html: "All CSV messages analyzed! Preparing download...", classes: "green" });
+        downloadCsvResults();
+        return;
+      }
+
+      const nextMessage = window.csvMessagesQueue.shift().trim();
+      if (!nextMessage) {
+        analyzeNextCsvMessage(); // skip empty lines
+        return;
+      }
+
+      textarea.value = nextMessage;
+      updateCharCount();
+      armPendingWindow();
+      socket.emit("analyzeText", nextMessage);
+
+      // Wait for the socket to return analysis before continuing
+      const waitForAnalysis = () => {
+        if (!currentAnalysis || currentAnalysis.text !== nextMessage) {
+          setTimeout(waitForAnalysis, 200); // poll every 200ms
+          return;
+        }
+
+        // Store result
+        window.csvAnalysisResults.push({
+          message: nextMessage,
+          score: currentAnalysis.score ?? 0,
+          isScam: currentAnalysis.level ?? 'Low'
+        });
+
+        currentAnalysis = null; // reset for next message
+        analyzeNextCsvMessage();
+      };
+      waitForAnalysis();
+    }
+
+    function downloadCsvResults() {
+      let csv = "message,score,isScam\n";
+      window.csvAnalysisResults.forEach(r => {
+        csv += `"${r.message.replace(/"/g, '""')}",${r.score},${r.isScam}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `analyzed_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      M.toast({ html: "CSV downloaded with results!", classes: "green" });
+    }
+
+
+
   </script>
 </body>
 

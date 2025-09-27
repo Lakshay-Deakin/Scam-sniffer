@@ -3,27 +3,30 @@ const sanitizeHtml = require("sanitize-html");
 const analyzeText = require("../utils/analyzer");
 const Analysis = require("../models/analysis"); // your Mongoose model
 const { isAuthenticated } = require('../utils/auth');
+const multer = require("multer");
+const xlsx = require("xlsx");
+const fs = require("fs");
+const path = require("path");
 
+const upload = multer({ dest: "uploads/" });
 
 module.exports = function (io) {
   const router = express.Router();
 
   let activeUsers = 0;
-
-  // --------------------
-  // Socket.io handling
-  // --------------------
-
   let recentPhrases = [];
 
   function extractKeywords(text) {
     return text
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, "")   // remove punctuation
-      .split(/\s+/)                  // split into words
-      .filter(word => word.length > 2); // remove very short words
+      .replace(/[^a-z0-9\s]/g, "")
+      .split(/\s+/)
+      .filter(word => word.length > 2);
   }
 
+  // --------------------
+  // Socket.io handling
+  // --------------------
   io.on("connection", (socket) => {
     activeUsers++;
     console.log("User connected. Active users:", activeUsers);
@@ -35,7 +38,6 @@ module.exports = function (io) {
     }
 
     socket.on("analyzeText", async (data) => {
-      // data can be string or object { text, email }
       const rawText = typeof data === "string" ? data : data.text;
       const email = data.email || null;
 
@@ -46,47 +48,38 @@ module.exports = function (io) {
 
       recentPhrases.push({ text: normalized, socketId: socket.id, timestamp: Date.now() });
 
-      // Remove old phrases
+      // keep only last 60 seconds
       recentPhrases = recentPhrases.filter(p => Date.now() - p.timestamp < 60000);
-      const newKeywords = extractKeywords(normalized);
 
-      // find phrases from other users with keyword overlap
+      const newKeywords = extractKeywords(normalized);
       const matches = recentPhrases.filter(p => {
-        if (p.socketId === socket.id) return false; // skip self
+        if (p.socketId === socket.id) return false;
         const otherKeywords = extractKeywords(p.text);
         const common = newKeywords.filter(word => otherKeywords.includes(word));
-        return common.length >= 2; // threshold: at least 2 words in common
+        return common.length >= 2;
       });
 
-      console.log(matches.length,'------------+++++++++++')
       if (activeUsers >= 2) {
-      io.emit("notification", { message: `${activeUsers} users are currently online!` });
-    }
+        io.emit("notification", { message: `${activeUsers} users are currently online!` });
+      }
       if (matches.length > 0) {
         io.emit("notification", {
           message: `Similar scammy phrase detected: "${rawText}"`,
           phrase: rawText,
           count: matches.length + 1,
-          examples: matches.map(m => m.text) // optional, for debugging
+          examples: matches.map(m => m.text)
         });
       }
 
-
       // Analyze text
       const result = analyzeText(text);
-
-      // Ensure indicators is an array of objects
       const indicators = Array.isArray(result.indicators)
-        ? result.indicators.map(ind => {
-          if (typeof ind === "string") return { key: "", description: ind };
-          return ind;
-        })
+        ? result.indicators.map(ind =>
+            typeof ind === "string" ? { key: "", description: ind } : ind
+          )
         : [];
-
-      // Mark as scam if score > 50
       const isScam = result.score > 50;
 
-      // Save to MongoDB if email exists
       if (email) {
         try {
           const analysisDoc = new Analysis({
@@ -103,18 +96,8 @@ module.exports = function (io) {
         }
       }
 
-      // Send result to client
       socket.emit("analysisResult", { ...result, isScam, indicators });
-
-      // Optional: broadcast new analysis to admins
       io.emit("newAnalysis", { text, ...result, isScam, indicators });
-    });
-
-    socket.on("phraseNotification", (data) => {
-      M.toast({
-        html: `${data.count} user(s) typed the same phrase: "${data.phrase}"`,
-        classes: "orange"
-      });
     });
 
     socket.on("disconnect", () => {
@@ -135,14 +118,11 @@ module.exports = function (io) {
       if (!text) return res.status(400).json({ error: "Please provide text" });
 
       const result = analyzeText(text);
-
       const indicators = Array.isArray(result.indicators)
-        ? result.indicators.map(ind => {
-          if (typeof ind === "string") return { key: "", description: ind };
-          return ind;
-        })
+        ? result.indicators.map(ind =>
+            typeof ind === "string" ? { key: "", description: ind } : ind
+          )
         : [];
-
       const isScam = result.score > 50;
 
       if (email) {
@@ -162,7 +142,6 @@ module.exports = function (io) {
       }
 
       io.emit("newAnalysis", { text, ...result, isScam, indicators });
-
       res.json({ ...result, isScam, indicators });
     } catch (err) {
       console.error(err);
@@ -170,6 +149,9 @@ module.exports = function (io) {
     }
   });
 
+  // --------------------
+  // GET /history
+  // --------------------
   router.get('/history', isAuthenticated, async (req, res) => {
     try {
       const userEmail = res.locals.user?.email;
@@ -178,7 +160,6 @@ module.exports = function (io) {
 
       let query = {};
       if (userRole !== 'admin') {
-        // regular user → only their own analyses
         query.email = userEmail;
       }
 
@@ -199,5 +180,54 @@ module.exports = function (io) {
       res.status(500).json({ error: 'Server error' });
     }
   });
+
+  // --------------------
+  // NEW: Import Excel, analyze, return new Excel
+  // --------------------
+  router.post("/import-excel", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+      const workbook = xlsx.readFile(req.file.path);
+      const sheetName = workbook.SheetNames[0];
+      const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+      const analysed = rows.map((row) => {
+        const raw = String(row.message || "").trim();
+        const text = sanitizeHtml(raw, { allowedTags: [], allowedAttributes: {} });
+        const result = analyzeText(text);
+
+        const indicators = Array.isArray(result.indicators)
+          ? result.indicators.map(ind =>
+              typeof ind === "string" ? ind : ind.description
+            )
+          : [];
+
+        return {
+          ...row, // keep all original columns
+          Score: result.score,
+          Level: result.level,
+          IsScam: result.score > 50 ? "Yes" : "No",
+          Indicators: indicators.join(", ")
+        };
+      });
+
+      // overwrite the same sheet with results added
+      const newSheet = xlsx.utils.json_to_sheet(analysed);
+      workbook.Sheets[sheetName] = newSheet;
+
+      const outputPath = path.join(__dirname, "../uploads", `results-${Date.now()}.xlsx`);
+      xlsx.writeFile(workbook, outputPath);
+
+      res.download(outputPath, "analysis-results.xlsx", () => {
+        fs.unlinkSync(req.file.path);
+        fs.unlinkSync(outputPath);
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+
   return router;
 };
