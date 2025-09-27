@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const http = require("http");
 const bcrypt = require("bcrypt");
+const MongoStore = require("connect-mongo");
 
 const app = express();
 const server = http.createServer(app);
@@ -32,26 +33,37 @@ app.use(bodyParser.json());
 // Static files (serve /public)
 app.use(express.static(path.join(__dirname, "public")));
 
-// Session
+// --- Mongo Connection
+mongoose
+  .connect("mongodb://localhost:27017/scam_sniffer", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error(err));
+
+// --- Session (connect-mongo)
 app.use(
   session({
-    secret: "mysecretkey",
+    secret: "mysecretkey", // ⚠️ better to use process.env.SESSION_SECRET
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: "mongodb://localhost:27017/scam_sniffer", // same DB
+      collectionName: "sessions", // will create a new "sessions" collection
+      ttl: 14 * 24 * 60 * 60, // = 14 days
+    }),
+    cookie: {
+      maxAge: 1000 * 60 * 60, // 1 hour
+      httpOnly: true,
+      secure: false, // set to true if using HTTPS
+    },
   })
 );
 
 // Attach res.locals.user
 app.use(withUser);
 
-// Mongo
-mongoose
-  .connect("mongodb://localhost:27017/scam_sniffer", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error(err));
 
 // --- Auth status endpoints for the front-end
 mountAuthEndpoints(app);
