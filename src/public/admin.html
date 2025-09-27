@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+
+  <p>Total Users: <span id="userCount">Loading...</span></p>
+
+  <a href="/history.html">Go to History</a>
+  <a href="/users.html">Go to History</a>
+
+
+  <script>
+    // Fetch user count from backend
+    fetch("/admin/user-count")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("userCount").innerText = data.totalUsers;
+      })
+      .catch(err => {
+        console.error("Error fetching count:", err);
+        document.getElementById("userCount").innerText = "Error";
+      });
+  </script>
+</body>
+</html>

@@ -13,6 +13,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, { cors: { origin: "*" } });
 
+
 // Models
 const User = require("./models/user");
 
@@ -123,7 +124,7 @@ app.get("/logout", (req, res) => {
 
 // Example protected admin page
 app.get("/admin", isAuthenticated, isAdmin, (req, res) => {
-  res.send("<h1>Welcome Admin!</h1>");
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
 // Serve analyse page (public access; features are gated client-side)
@@ -146,6 +147,16 @@ io.on("connection", (socket) => {
     io.emit("userCount", liveUsers);
   });
 });
+
+
+const adminRoutes = require("./routes/admin");
+
+// use it under /admin
+app.use("/admin", adminRoutes);
+app.use(express.static(path.join(__dirname, "public")));
+
+const usersRouter = require('./routes/users');
+app.use('/users', usersRouter);
 
 // --- Start
 const PORT = process.env.PORT || 5000;

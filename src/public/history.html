@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>History</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f2f2;
+    }
+    button {
+      background: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>History Page</h1>
+
+  <table id="historyTable">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Text</th>
+        <th>Score</th>
+        <th>Level</th>
+        <th>Indicators</th>
+        <th>Scam?</th>
+        <th>Created At</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Records will load here -->
+    </tbody>
+  </table>
+
+  <a href="/admin.html">⬅ Back to Dashboard</a>
+
+  <script>
+    async function loadHistory() {
+      const res = await fetch("/admin/history-data");
+      const records = await res.json();
+      const tbody = document.querySelector("#historyTable tbody");
+      tbody.innerHTML = "";
+
+      records.forEach(record => {
+        const tr = document.createElement("tr");
+
+        // Render indicators as list
+        let indicatorsHTML = "<ul>";
+        if (record.indicators && record.indicators.length > 0) {
+          record.indicators.forEach(ind => {
+            indicatorsHTML += `<li><strong>${ind.key}:</strong> ${ind.description}</li>`;
+          });
+        }
+        indicatorsHTML += "</ul>";
+
+        tr.innerHTML = `
+          <td>${record.email}</td>
+          <td>${record.text}</td>
+          <td>${record.score}</td>
+          <td>${record.level}</td>
+          <td>${indicatorsHTML}</td>
+          <td>${record.isScam ? "✅ Yes" : "❌ No"}</td>
+          <td>${new Date(record.createdAt).toLocaleString()}</td>
+          <td><button onclick="deleteRecord('${record._id}')">Delete</button></td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm("Are you sure you want to delete this record?")) return;
+
+      const res = await fetch(`/admin/history/${id}`, {
+        method: "DELETE"
+      });
+
+      if (res.ok) {
+        loadHistory(); // reload after delete
+      } else {
+        alert("Failed to delete record");
+      }
+    }
+
+    loadHistory();
+  </script>
+</body>
+</html>
