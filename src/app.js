@@ -46,7 +46,7 @@ app.use(withUser);
 
 // Mongo
 mongoose
-  .connect("mongodb://localhost:27017/scam_sniffer", {
+  .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -66,16 +66,23 @@ app.get("/signin", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "signin.html"));
 });
 
+
 // --- REGISTER
 app.post("/register", async (req, res) => {
   try {
+    console.log(req.body,res.body,'_-----------=++++++++++++++++++++++')
     const { email, password, role } = req.body;
+    console.log(email,password,role,'===================+++++++++++++++++++++++')
+    console.log(req.body,'+++++++++++++++++++++++++++++++++++++++++++++')
+    if (!password) {
+        return res.status(400).send("Password is required")};
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(email,password,role,'===================+++++++++++++++++++++++')
 
     const user = new User({
       email,
       password: hashedPassword,
-      role: role || "user",
+      role,
     });
     await user.save();
 
