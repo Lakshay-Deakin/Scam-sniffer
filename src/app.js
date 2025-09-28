@@ -46,12 +46,32 @@ app.use(withUser);
 
 // Mongo
 mongoose
-  .connect("mongodb+srv://lakshaymodgil476_db_user:cibYIOwWdTMf8SdE@cluster0.rdwiuv5.mongodb.net/scam_sniffer?retryWrites=true&w=majority", {
+  .connect("mongodb+srv://lakshaymodgil476_db_user:cibYIOwWdTMf8SdE@cluster0.rdwiuv5.mongodb.net/scam_sniffer_1?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error(err));
+
+
+app.get("/test-db", async (req, res) => {
+    try {
+        // Get list of collections as a simple DB test
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        res.send({
+            status: "success",
+            message: "MongoDB is connected!",
+            collections: collections.map(c => c.name)
+        });
+    } catch (err) {
+        res.send({
+            status: "error",
+            message: "MongoDB connection failed",
+            error: err.message
+        });
+    }
+});
+
 
 // --- Auth status endpoints for the front-end
 mountAuthEndpoints(app);
