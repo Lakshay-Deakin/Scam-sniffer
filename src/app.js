@@ -46,7 +46,7 @@ app.use(withUser);
 
 // Mongo
 mongoose
-  .connect(process.env.MONGO_URI, {
+  .connect("mongodb+srv://lakshaymodgil476_db_user:cibYIOwWdTMf8SdE@cluster0.rdwiuv5.mongodb.net/scam_sniffer?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
