@@ -49,7 +49,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: "mongodb://localhost:27017/scam_sniffer", // same DB
+      mongoUrl: "mongodb+srv://lakshaymodgil476_db_user:cibYIOwWdTMf8SdE@cluster0.rdwiuv5.mongodb.net/scam_sniffer_1?retryWrites=true&w=majority", // same DB
       collectionName: "sessions", // will create a new "sessions" collection
       ttl: 14 * 24 * 60 * 60, // = 14 days
     }),
