@@ -154,6 +154,12 @@
       color:#667eea; font-size: 1.2rem; pointer-events: none;
     }
 
+    .prefix-icon-pass-lock{
+      position:absolute; right: 12px; top: 30%;
+      transform: translateY(-50%); /* perfect vertical center */
+      color:#667eea; font-size: 1.2rem; pointer-events: none;
+    }
+    
     .role-label{ color:#666; font-size:.92rem; margin: 10px 0 10px; font-weight:600; display:block; }
     .role-selection{
       display:grid; gap: 12px; grid-template-columns: repeat(2, minmax(0,1fr));
@@ -346,7 +352,7 @@
         <div class="input-field">
           <label for="password">Password</label>
           <input type="password" name="password" id="password" required minlength="6" autocomplete="new-password"/>
-          <i class="material-icons prefix-icon" aria-hidden="true">lock</i>
+          <i class="material-icons prefix-icon-pass-lock" aria-hidden="true">lock</i>
 
           <div class="password-strength" aria-live="polite">
             <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
