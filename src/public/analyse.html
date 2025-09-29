@@ -883,7 +883,7 @@
     function armPendingWindow(ms = 15000) { hasPending = true; clearTimeout(pendingTimer); pendingTimer = setTimeout(() => { hasPending = false; }, ms); }
     function clearPendingWindow() { hasPending = false; clearTimeout(pendingTimer); pendingTimer = null; }
 
-    const socket = io("http://localhost:5000");
+    const socket = io("https://scam-sniffer-1.onrender.com/");
 
     const userCountDiv = document.getElementById("userCount");
     const textarea = document.getElementById("text");
