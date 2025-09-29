@@ -64,6 +64,7 @@
     main{ padding: 24px 12px 40px; }
 
     /* ---------- Button icon centering fix ---------- */
+    /* Materialize .btn variants */
     .btn, .btn-large, .btn-small{
       display: inline-flex !important;
       align-items: center;
@@ -74,7 +75,6 @@
     }
     .btn-large{ min-height: 52px; padding: 0 22px; }
 
-    /* Inner wrapper so icon + label are one flex unit */
     .btn .btn-content,
     .btn-large .btn-content,
     .btn-small .btn-content{
@@ -84,17 +84,45 @@
       gap: 8px;
     }
 
-    /* Neutralize Materialize's float helpers inside buttons */
     .btn i.left, .btn i.right,
     .btn-large i.left, .btn-large i.right{
       float: none !important;
       margin: 0 !important;
     }
 
-    /* Perfect centering for material icons in buttons */
     .btn i.material-icons,
     .btn-large i.material-icons,
     .btn-small i.material-icons{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      line-height: 1;
+      height: 1em;
+      width: 1em;
+      vertical-align: middle;
+    }
+
+    /* Apply same centering rules to custom buttons (.btn-outline/.btn-orange/.btn-custom) */
+    .btn-outline,
+    .btn-orange,
+    .btn-custom{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      line-height: 1;
+      text-decoration: none;
+    }
+    .btn-outline i.left, .btn-outline i.right,
+    .btn-orange i.left, .btn-orange i.right,
+    .btn-custom i.left, .btn-custom i.right{
+      float: none !important;
+      margin: 0 !important;
+    }
+    .btn-outline i.material-icons,
+    .btn-orange i.material-icons,
+    .btn-custom i.material-icons{
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -112,11 +140,13 @@
       transition: transform .2s ease, box-shadow .2s ease;
     }
     .btn-custom:hover{ transform: translateY(-2px); box-shadow: var(--shadow-2); }
+
     .btn-outline{
       color:#667eea; border: 2px solid #667eea; border-radius: 999px; padding: 10px 20px; font-weight:700; background:#fff;
       transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
     }
     .btn-outline:hover{ background:#667eea; color:#fff; transform: translateY(-2px); box-shadow: var(--shadow-1); }
+
     .btn-orange{
       background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
       color:#fff; border-radius: 999px; padding: 12px 20px; font-weight:700; border:0;

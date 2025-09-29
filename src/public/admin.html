@@ -1,28 +1,453 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin Dashboard</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Admin Dashboard - ScamSniffer</title>
+
+  <!-- Materialize CSS -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Brand favicon -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23667eea'/%3E%3Cstop offset='1' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M32 6l18 6v13c0 13-8.3 24.4-18 28-9.7-3.6-18-15-18-28V12l18-6z'/%3E%3Cpath fill='white' d='M28 34l-6-6-4 4 10 10 16-16-4-4z'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#667eea"/>
+
+  <style>
+    :root{
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --danger: #f44336; --warning:#ff9800; --success:#4caf50;
+      --shadow-light: 0 2px 10px rgba(0,0,0,.1);
+      --shadow-medium: 0 8px 25px rgba(0,0,0,.15);
+      --shadow-heavy: 0 15px 35px rgba(0,0,0,.2);
+      --radius-xl: 20px;
+    }
+
+    html, body { height: 100%; }
+    body{
+      background: var(--primary-gradient);
+      min-height: 100vh;
+      font-family: 'Roboto', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
+    }
+
+    /* Navbar + single mobile toggle (like analyse.html) */
+    .navbar-fixed{ z-index: 1000; }
+    .brand-logo{ font-weight:700; letter-spacing:.2px; }
+
+    #nav-toggle{
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
+      left: calc(env(safe-area-inset-left, 0px) + 10px);
+      z-index: 2500;
+      width: 44px; height: 44px; border-radius: 10px;
+      display: none; align-items:center; justify-content:center;
+      background: rgba(33,150,243,.95); color:#fff;
+      box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    }
+    #nav-toggle .material-icons{ line-height:1; font-size: 26px; }
+    @media (max-width: 992px){ #nav-toggle{ display: inline-flex; } }
+
+    .sidenav{ z-index: 2000; padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+    .sidenav .user-view{ padding-top: 12px; background: rgba(0,0,0,.22); }
+    .sidenav .user-view .name, .sidenav .user-view .email{
+      color:#fff !important; text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    }
+
+    /* Button/icon centering (exactly like analyse.html) */
+    .btn, .btn-large, .btn-small, .btn-flat{
+      display:inline-flex !important; align-items:center; justify-content:center; gap:8px;
+      text-transform:none; line-height:1.2 !important;
+    }
+    .btn i, .btn-large i, .btn-small i, .btn-flat i{
+      float:none !important; margin:0 !important;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:20px; line-height:1; height:1em; width:1em; vertical-align:middle;
+    }
+
+    /* Floating background (matches analyse.html) */
+    .floating-elements{ position:fixed; inset:0; pointer-events:none; z-index:-1; }
+    .floating-elements::before,.floating-elements::after{
+      content:""; position:absolute; border-radius:50%; background: rgba(255,255,255,.1); animation: float 8s ease-in-out infinite;
+    }
+    .floating-elements::before{ width:200px; height:200px; top:10%; right:-100px; }
+    .floating-elements::after{ width:150px; height:150px; bottom:20%; left:-75px; animation-delay:4s; }
+    @keyframes float{ 0%,100%{ transform: translateY(0) rotate(0) } 50%{ transform: translateY(-30px) rotate(10deg) } }
+
+    /* Main container */
+    .main-container{ padding:24px 0 40px; min-height: calc(100vh - 64px); }
+
+    /* Header card */
+    .page-header{
+      background: rgba(255,255,255,.95); backdrop-filter: blur(10px);
+      border-radius: 15px; padding: 22px 24px; margin-bottom: 24px; box-shadow: var(--shadow-medium);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    }
+    .page-title{ display:flex; align-items:center; gap:12px; margin:0; }
+    .page-title i{ color:#667eea; font-size:32px; }
+    .page-title h4{ margin:0; color:#333; font-weight:600; }
+    .subtitle{ margin:0; color:#666; font-size:.95rem; }
+
+    .nav-buttons{ display:flex; gap:12px; flex-wrap:wrap; }
+
+    /* Stats grid */
+    .stats-grid{
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap:18px; margin-bottom:24px;
+    }
+    .stat-card{
+      background: rgba(255,255,255,.95); backdrop-filter: blur(10px);
+      border-radius: 15px; padding: 18px; box-shadow: var(--shadow-light);
+      transition: transform .25s ease, box-shadow .25s ease; cursor:default;
+    }
+    .stat-card:hover{ transform: translateY(-4px); box-shadow: var(--shadow-medium); }
+    .stat-card-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .stat-icon{
+      width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px;
+    }
+    .icon-users{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .icon-analyses{ background: linear-gradient(135deg, #00bfa5 0%, #00897b 100%); }
+    .icon-scams{ background: linear-gradient(135deg, #f44336 0%, #c62828 100%); }
+    .icon-accuracy{ background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); }
+    .stat-value{ font-size:2.2rem; font-weight:800; margin:6px 0 0; color:#333; line-height:1; }
+    .stat-label{ color:#666; font-size:.88rem; text-transform:uppercase; letter-spacing:.4px; margin-top:6px; }
+    .stat-change{ font-weight:700; font-size:.85rem; padding:4px 8px; border-radius:12px; }
+    .pos{ background:#e8f5e9; color:#2e7d32; } .neg{ background:#ffebee; color:#c62828; }
+
+    /* Quick actions */
+    .quick-actions{
+      background: rgba(255,255,255,.96); backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl); padding: 22px; box-shadow: var(--shadow-medium); margin-bottom: 24px;
+    }
+    .quick-actions h5{ margin:0 0 14px; color:#333; display:flex; align-items:center; gap:8px; }
+    .action-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; }
+    .action-card{
+      background: linear-gradient(135deg, #f5f5f5 0%, #e9ecef 100%); border-radius:12px; padding:16px;
+      text-align:center; transition: all .25s; text-decoration:none; color:#333; display:block;
+    }
+    .action-card:hover{ transform: translateY(-3px); box-shadow: var(--shadow-medium); background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%); }
+    .action-card i{ font-size:32px; display:block; margin-bottom:10px; }
+    .action-card.primary{ background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
+    .action-card.primary i{ color:#1976d2; }
+    .action-card.success{ background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); }
+    .action-card.success i{ color:#2e7d32; }
+    .action-card.warning{ background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
+    .action-card.warning i{ color:#ef6c00; }
+    .action-card.danger{ background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); }
+    .action-card.danger i{ color:#c62828; }
+
+    /* Row sections */
+    .chart-container{
+      background: rgba(255,255,255,.95); backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl); padding: 24px; box-shadow: var(--shadow-medium);
+      min-height: 300px; display:flex; align-items:center; justify-content:center; text-align:center;
+    }
+    .recent-activity{
+      background: rgba(255,255,255,.96); backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl); box-shadow: var(--shadow-medium); overflow:hidden;
+    }
+    .activity-header{
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; padding: 16px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .activity-header h5{ margin:0; display:flex; align-items:center; gap:8px; }
+    .activity-list{ max-height: 420px; overflow-y:auto; padding:16px; }
+    .activity-item{
+      display:flex; align-items:flex-start; gap:12px; padding:12px; margin-bottom:8px;
+      background:#f8f9fa; border-radius:10px; transition: background .2s;
+    }
+    .activity-item:hover{ background:#eef7ff; }
+    .activity-icon{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .activity-icon.user{ background:#e3f2fd; color:#1976d2; }
+    .activity-icon.analysis{ background:#e8f5e9; color:#2e7d32; }
+    .activity-icon.scam{ background:#ffebee; color:#c62828; }
+    .activity-title{ font-weight:700; color:#333; margin-bottom:2px; }
+    .activity-time{ font-size:.85rem; color:#999; }
+
+    /* Responsive */
+    @media (max-width: 992px){
+      .nav-buttons{ width:100%; }
+      .nav-buttons .btn{ flex:1; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Admin Dashboard</h1>
+  <div class="floating-elements" aria-hidden="true"></div>
 
-  <p>Total Users: <span id="userCount">Loading...</span></p>
+  <!-- Single mobile toggle -->
+  <a href="#" id="nav-toggle" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false">
+    <i class="material-icons">menu</i>
+  </a>
 
-  <a href="/history.html">Go to History</a>
-  <a href="/users.html">Go to History</a>
+  <!-- Navbar -->
+  <div class="navbar-fixed" role="navigation">
+    <nav class="blue darken-2">
+      <div class="nav-wrapper container">
+        <a href="/index.html" class="brand-logo" aria-label="ScamSniffer Home">
+          <i class="material-icons left" aria-hidden="true">security</i>ScamSniffer
+        </a>
+        <ul class="right hide-on-med-and-down" id="navAuthSection">
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/analyse.html">Analyze</a></li>
+          <li><a href="/history.html">History</a></li>
+          <!-- Auth links injected by JS -->
+        </ul>
+      </div>
+    </nav>
+  </div>
 
+  <!-- Mobile Sidenav -->
+  <ul class="sidenav" id="mobile-nav">
+    <li>
+      <div class="user-view blue darken-2 white-text">
+        <div class="background"></div>
+        <span class="name">ScamSniffer</span>
+        <span class="email" id="mobileUserEmail">Admin Dashboard</span>
+      </div>
+    </li>
+    <li><a href="/index.html"><i class="material-icons">home</i>Home</a></li>
+    <li><a href="/analyse.html"><i class="material-icons">search</i>Analyze</a></li>
+    <li><a href="/history.html"><i class="material-icons">history</i>History</a></li>
+    <li><a href="/users.html"><i class="material-icons">people</i>Users</a></li>
+    <li id="mobileAuthLinks"><!-- Injected by JS --></li>
+  </ul>
+
+  <div class="main-container">
+    <div class="container">
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <div class="page-title">
+            <i class="material-icons">dashboard</i>
+            <h4>Admin Dashboard</h4>
+          </div>
+          <p class="subtitle">Welcome back, <span id="adminEmail">Admin</span> — here’s your system overview.</p>
+        </div>
+        <div class="nav-buttons">
+          <a href="/history.html" class="btn blue waves-effect waves-light">
+            <i class="material-icons">history</i><span>View History</span>
+          </a>
+          <a href="/users.html" class="btn green waves-effect waves-light">
+            <i class="material-icons">people</i><span>Manage Users</span>
+          </a>
+          <a href="/analyse.html" class="btn orange waves-effect waves-light">
+            <i class="material-icons">search</i><span>Test Analysis</span>
+          </a>
+          <a href="#!" class="btn purple waves-effect waves-light" onclick="exportData()">
+            <i class="material-icons">file_download</i><span>Export Data</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon icon-users"><i class="material-icons">people</i></div>
+            <span class="stat-change pos">+12%</span>
+          </div>
+          <div class="stat-value" id="totalUsers">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon icon-analyses"><i class="material-icons">analytics</i></div>
+            <span class="stat-change pos">+23%</span>
+          </div>
+          <div class="stat-value" id="totalAnalyses">0</div>
+          <div class="stat-label">Total Analyses</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon icon-scams"><i class="material-icons">warning</i></div>
+            <span class="stat-change neg">+45%</span>
+          </div>
+          <div class="stat-value" id="scamsDetected">0</div>
+          <div class="stat-label">Scams Detected</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon icon-accuracy"><i class="material-icons">verified_user</i></div>
+            <span class="stat-change pos">99.7%</span>
+          </div>
+          <div class="stat-value">99.7%</div>
+          <div class="stat-label">Accuracy Rate</div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="quick-actions">
+        <h5><i class="material-icons">flash_on</i>Quick Actions</h5>
+        <div class="action-grid">
+          <a href="/history.html" class="action-card primary">
+            <i class="material-icons">list</i>
+            <h6 style="margin:.25rem 0 .1rem;">All Records</h6>
+            <p style="margin:0; color:#555;">Browse analysis history</p>
+          </a>
+          <a href="/users.html" class="action-card success">
+            <i class="material-icons">admin_panel_settings</i>
+            <h6 style="margin:.25rem 0 .1rem;">User Admin</h6>
+            <p style="margin:0; color:#555;">Accounts & roles</p>
+          </a>
+          <a href="/analyse.html" class="action-card warning">
+            <i class="material-icons">bolt</i>
+            <h6 style="margin:.25rem 0 .1rem;">Run Test</h6>
+            <p style="margin:0; color:#555;">Quick analysis</p>
+          </a>
+          <a href="#!" class="action-card danger" onclick="exportData()">
+            <i class="material-icons">file_download</i>
+            <h6 style="margin:.25rem 0 .1rem;">Export</h6>
+            <p style="margin:0; color:#555;">Download reports</p>
+          </a>
+        </div>
+      </div>
+
+      <!-- <div class="row">
+        <div class="col s12 l7">
+          <div class="chart-container">
+            <div>
+              <i class="material-icons" style="font-size:48px; color:#ddd;">insert_chart</i>
+              <p style="color:#999; margin:12px 0 2px;">Analysis Trends</p>
+              <p style="color:#bbb; font-size:.92rem;">Chart visualization coming soon</p>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- <div class="col s12 l5">
+          <div class="recent-activity">
+            <div class="activity-header">
+              <h5><i class="material-icons">access_time</i>Recent Activity</h5>
+              <a href="/history.html" class="btn-flat white-text waves-effect"><i class="material-icons">history</i><span>View All</span></a>
+            </div>
+            <div class="activity-list" id="activityList">
+              <div class="activity-item">
+                <div class="activity-icon user"><i class="material-icons">person_add</i></div>
+                <div class="activity-content">
+                  <div class="activity-title">New user registered</div>
+                  <div class="activity-time">2 minutes ago</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon analysis"><i class="material-icons">check_circle</i></div>
+                <div class="activity-content">
+                  <div class="activity-title">Analysis completed</div>
+                  <div class="activity-time">5 minutes ago</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon scam"><i class="material-icons">report</i></div>
+                <div class="activity-content">
+                  <div class="activity-title">High-risk scam detected</div>
+                  <div class="activity-time">12 minutes ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
   <script>
-    // Fetch user count from backend
-    fetch("/admin/user-count")
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("userCount").innerText = data.totalUsers;
-      })
-      .catch(err => {
-        console.error("Error fetching count:", err);
-        document.getElementById("userCount").innerText = "Error";
+    // Init navbar/sidenav like analyse.html
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidenavEl = document.getElementById('mobile-nav');
+      const navToggle = document.getElementById('nav-toggle');
+      const toggleIcon = navToggle.querySelector('.material-icons');
+
+      function syncToggleIcon(isOpen){
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+        toggleIcon.textContent = isOpen ? 'close' : 'menu';
+      }
+
+      const sidenavInstance = M.Sidenav.init(sidenavEl, {
+        edge:'left', draggable:true,
+        onOpenEnd:()=>syncToggleIcon(true),
+        onCloseEnd:()=>syncToggleIcon(false)
       });
+
+      navToggle.addEventListener('click', (e)=>{
+        e.preventDefault();
+        sidenavInstance.isOpen ? sidenavInstance.close() : sidenavInstance.open();
+      });
+
+      document.querySelectorAll('#mobile-nav a').forEach(link=>{
+        link.addEventListener('click', ()=>{ if (sidenavInstance.isOpen) sidenavInstance.close(); });
+      });
+
+      syncToggleIcon(false);
+
+      // Auth + dashboard data
+      checkAuth();
+      loadDashboardData();
+    });
+
+    // Auth check (admin only)
+    async function checkAuth(){
+      try{
+        const res = await fetch('/api/auth/check', { credentials:'include' });
+        if(!res.ok) return location.href = '/signin.html';
+        const data = await res.json();
+        if(data.role !== 'admin'){ return location.href = '/index.html'; }
+
+        document.getElementById('adminEmail').textContent = data.email || 'Admin';
+
+        const navAuthSection = document.getElementById('navAuthSection');
+        const mobileAuthLinks = document.getElementById('mobileAuthLinks');
+        const mobileUserEmail = document.getElementById('mobileUserEmail');
+
+        navAuthSection.insertAdjacentHTML('beforeend', `
+          <li style="display:flex; align-items:center; gap:10px;">
+            <span class="white-text" style="opacity:.9;">${data.email}</span>
+            <a href="/logout" class="btn-small red waves-effect waves-light">
+              <i class="material-icons">exit_to_app</i><span>Logout</span>
+            </a>
+          </li>
+        `);
+        mobileAuthLinks.innerHTML = `<li><a href="/logout"><i class="material-icons">exit_to_app</i>Logout</a></li>`;
+        mobileUserEmail.textContent = data.email || 'Admin Dashboard';
+      }catch(err){
+        console.error('Auth check failed:', err);
+        location.href = '/signin.html';
+      }
+    }
+
+    // Load counts
+    async function loadDashboardData(){
+      // Users
+      fetch('/admin/user-count', { credentials:'include' })
+        .then(r=>r.json())
+        .then(d=>{ document.getElementById('totalUsers').textContent = d.totalUsers || 0; })
+        .catch(()=>{ document.getElementById('totalUsers').textContent = '—'; });
+
+      // Analyses & scams
+      fetch('/admin/history-data', { credentials:'include' })
+        .then(r=>r.json())
+        .then(list=>{
+          document.getElementById('totalAnalyses').textContent = Array.isArray(list) ? list.length : 0;
+          const scams = Array.isArray(list) ? list.filter(x=>x.isScam).length : 0;
+          document.getElementById('scamsDetected').textContent = scams;
+        })
+        .catch(()=>{ document.getElementById('totalAnalyses').textContent = '—'; document.getElementById('scamsDetected').textContent = '—'; });
+    }
+
+    // Export placeholder
+    function exportData(){
+      M.toast({ html:'Preparing data export…', classes:'blue' });
+      setTimeout(()=> M.toast({ html:'Data export started', classes:'green' }), 800);
+    }
   </script>
 </body>
 </html>

@@ -1,106 +1,609 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>History</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Analysis History - ScamSniffer</title>
+
+  <!-- Materialize CSS -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Brand favicon -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23667eea'/%3E%3Cstop offset='1' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M32 6l18 6v13c0 13-8.3 24.4-18 28-9.7-3.6-18-15-18-28V12l18-6z'/%3E%3Cpath fill='white' d='M28 34l-6-6-4 4 10 10 16-16-4-4z'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#667eea"/>
+
   <style>
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
+    :root{
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --danger: #f44336; --warning:#ff9800; --success:#4caf50;
+      --shadow-light: 0 2px 10px rgba(0,0,0,.1);
+      --shadow-medium: 0 8px 25px rgba(0,0,0,.15);
+      --shadow-heavy: 0 15px 35px rgba(0,0,0,.2);
+      --radius-xl: 20px;
     }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      vertical-align: top;
-    }
-    th {
-      background: #f2f2f2;
-    }
-    button {
-      background: red;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-    ul {
+
+    html, body { height: 100%; }
+    body{
+      background: var(--primary-gradient);
+      min-height: 100vh;
+      font-family: 'Roboto', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding-left: 20px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
+    }
+
+    /* Navbar */
+    .navbar-fixed{ z-index: 1000; }
+    .brand-logo{ font-weight:700; letter-spacing:.2px; }
+
+    /* Single mobile toggle */
+    #nav-toggle{
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
+      left: calc(env(safe-area-inset-left, 0px) + 10px);
+      z-index: 2500;
+      width: 44px; height: 44px; border-radius:10px;
+      display: none; align-items:center; justify-content:center;
+      background: rgba(33,150,243,.95); color:#fff;
+      box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    }
+    #nav-toggle .material-icons{ line-height:1; font-size:26px; }
+    @media (max-width: 992px){ #nav-toggle{ display: inline-flex; } }
+
+    .sidenav{ z-index:2000; padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+    .sidenav .user-view{ padding-top:12px; background: rgba(0,0,0,.22); }
+    .sidenav .user-view .name, .sidenav .user-view .email{ color:#fff !important; text-shadow:0 1px 2px rgba(0,0,0,.35); }
+
+    /* Keep button icons/text perfectly centered (same as analyse.html) */
+    .btn, .btn-large, .btn-small, .btn-flat{
+      display:inline-flex !important; align-items:center; justify-content:center; gap:8px;
+      text-transform:none; line-height:1.2 !important;
+    }
+    .btn i, .btn-large i, .btn-small i, .btn-flat i{
+      float:none !important; margin:0 !important;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:20px; line-height:1; height:1em; width:1em; vertical-align:middle;
+    }
+
+    /* Floating BG like analyse.html */
+    .floating-elements{ position:fixed; inset:0; pointer-events:none; z-index:-1; }
+    .floating-elements::before, .floating-elements::after{
+      content:""; position:absolute; border-radius:50%; background: rgba(255,255,255,.1); animation: float 8s ease-in-out infinite;
+    }
+    .floating-elements::before{ width:200px; height:200px; top:10%; right:-100px; }
+    .floating-elements::after{ width:150px; height:150px; bottom:20%; left:-75px; animation-delay:4s; }
+    @keyframes float{ 0%,100%{ transform: translateY(0) rotate(0) } 50%{ transform: translateY(-30px) rotate(10deg) } }
+
+    /* Main container */
+    .main-container{ padding:24px 0 40px; min-height: calc(100vh - 64px); }
+
+    /* Header card */
+    .page-header{
+      background: rgba(255,255,255,.95); backdrop-filter: blur(10px);
+      border-radius: 15px; padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--shadow-medium);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .page-title{ display:flex; align-items:center; gap:12px; margin:0; }
+    .page-title i{ color:#667eea; font-size:32px; }
+    .page-title h4{ margin:0; color:#333; font-weight:600; }
+    .nav-buttons{ display:flex; gap:12px; }
+
+    /* Stats */
+    .stats-row{
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap:18px; margin-bottom: 24px;
+    }
+    .stat-card{
+      background: rgba(255,255,255,.95); backdrop-filter: blur(10px);
+      border-radius:15px; padding:18px; text-align:center; box-shadow: var(--shadow-light);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .stat-card:hover{ transform: translateY(-4px); box-shadow: var(--shadow-medium); }
+    .stat-number{ font-size: 2.2rem; font-weight:800; margin: 6px 0; }
+    .stat-label{ color:#666; font-size:.9rem; letter-spacing:.4px; text-transform:uppercase; }
+
+    /* Table container */
+    .table-container{
+      background: rgba(255,255,255,.98); backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl); box-shadow: var(--shadow-heavy); overflow:hidden;
+    }
+    .table-header{
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color:#fff; padding: 16px 24px; display:flex; align-items:center; justify-content:space-between;
+    }
+    .table-header h5{ margin:0; display:flex; align-items:center; gap:8px; }
+
+    /* Filters */
+    .filter-controls{
+      display:flex; gap:10px; padding:16px 24px; background:#f8f9fa; border-bottom:1px solid #e0e0e0;
+      flex-wrap:wrap;
+    }
+    .filter-controls .input-field{ margin:0; flex:1; }
+    .filter-controls .input-field input{
+      margin:0; border:1px solid #ddd; border-radius:8px; padding:8px 12px;
+    }
+    .browser-default{ padding:8px; border-radius:8px; border:1px solid #ddd; }
+
+    /* Table */
+    .history-table{ width:100%; margin:0; }
+    .history-table thead{ background:#f5f5f5; }
+    .history-table th{
+      padding:14px; text-align:left; font-weight:600; color:#333; border-bottom:2px solid #e0e0e0;
+    }
+    .history-table td{
+      padding:14px; vertical-align:middle; border-bottom:1px solid #f0f0f0;
+    }
+    .history-table tbody tr:hover{ background:#f8f9fa; }
+
+    /* Risk badges */
+    .risk-badge{ padding:4px 12px; border-radius:12px; font-size:.85rem; font-weight:700; display:inline-block; }
+    .risk-high{ background:#ffebee; color:#c62828; }
+    .risk-medium{ background:#fff3e0; color:#ef6c00; }
+    .risk-low{ background:#e8f5e9; color:#2e7d32; }
+
+    /* Scam badge */
+    .scam-badge{ padding:4px 8px; border-radius:8px; font-size:.85rem; font-weight:700; }
+    .scam-yes{ background:#ffcdd2; color:#c62828; }
+    .scam-no{ background:#c8e6c9; color:#2e7d32; }
+
+    /* Text preview */
+    .text-preview{
+      max-width:320px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;
+    }
+    .text-preview:hover{ color:#667eea; }
+
+    /* Indicators list */
+    .indicators-list{ margin:0; padding-left:18px; font-size:.9rem; }
+    .indicators-list li{ margin-bottom:4px; }
+
+    /* Action buttons */
+    .btn-action{
+      padding:6px 12px; border:none; border-radius:8px; font-size:.85rem; cursor:pointer; transition:.2s;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn-view{ background:#e3f2fd; color:#1976d2; }
+    .btn-view:hover{ background:#1976d2; color:#fff; }
+    .btn-delete{ background:#ffebee; color:#c62828; margin-left:8px; }
+    .btn-delete:hover{ background:#c62828; color:#fff; }
+
+    /* States */
+    .empty-state, .loading-state{ text-align:center; padding:60px 20px; color:#666; }
+    .empty-state i{ font-size:64px; color:#ddd; margin-bottom:16px; }
+
+    /* Modal */
+    .modal{ border-radius:16px; max-width:680px; }
+    .modal .modal-content{ padding:24px; }
+    .detail-row{ display:flex; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #f0f0f0; }
+    .detail-label{ font-weight:600; min-width:140px; color:#555; }
+    .detail-value{ flex:1; color:#333; }
+
+    /* Responsive */
+    @media (max-width: 768px){
+      .page-header{ flex-direction:column; gap:12px; text-align:center; }
+      .nav-buttons{ width:100%; flex-direction:column; }
+      .nav-buttons .btn{ width:100%; }
+      .table-container{ margin:10px; }
+      .history-table{ font-size:.88rem; }
+      .history-table th, .history-table td{ padding:10px; }
+      .text-preview{ max-width:160px; }
     }
   </style>
 </head>
 <body>
-  <h1>History Page</h1>
+  <div class="floating-elements" aria-hidden="true"></div>
 
-  <table id="historyTable">
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Text</th>
-        <th>Score</th>
-        <th>Level</th>
-        <th>Indicators</th>
-        <th>Scam?</th>
-        <th>Created At</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Records will load here -->
-    </tbody>
-  </table>
+  <!-- Single mobile toggle -->
+  <a href="#" id="nav-toggle" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false">
+    <i class="material-icons">menu</i>
+  </a>
 
-  <a href="/admin.html">⬅ Back to Dashboard</a>
+  <!-- Navbar -->
+  <div class="navbar-fixed" role="navigation">
+    <nav class="blue darken-2">
+      <div class="nav-wrapper container">
+        <a href="/index.html" class="brand-logo" aria-label="ScamSniffer Home">
+          <i class="material-icons left" aria-hidden="true">security</i>ScamSniffer
+        </a>
+        <ul class="right hide-on-med-and-down" id="navAuthSection">
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/analyse.html">Analyze</a></li>
+          <li><a href="/admin.html">Admin Dashboard</a></li>
+          <!-- Auth links injected by JS -->
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Mobile Sidenav -->
+  <ul class="sidenav" id="mobile-nav">
+    <li>
+      <div class="user-view blue darken-2 white-text">
+        <div class="background"></div>
+        <span class="name">ScamSniffer</span>
+        <span class="email" id="mobileUserEmail">Analysis History</span>
+      </div>
+    </li>
+    <li><a href="/index.html"><i class="material-icons">home</i>Home</a></li>
+    <li><a href="/analyse.html"><i class="material-icons">search</i>Analyze</a></li>
+    <li><a href="/admin.html"><i class="material-icons">dashboard</i>Admin Dashboard</a></li>
+    <li id="mobileAuthLinks"><!-- Auth links injected by JS --></li>
+  </ul>
+
+  <div class="main-container">
+    <div class="container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="page-title">
+          <i class="material-icons">history</i>
+          <h4>Analysis History</h4>
+        </div>
+        <div class="nav-buttons">
+          <a href="/analyse.html" class="btn blue waves-effect waves-light">
+            <i class="material-icons">search</i><span>New Analysis</span>
+          </a>
+          <a href="/admin.html" class="btn purple waves-effect waves-light" id="adminBtn">
+            <i class="material-icons">dashboard</i><span>Admin Dashboard</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <i class="material-icons" style="color:#667eea; font-size:32px;">analytics</i>
+          <div class="stat-number" id="totalCount">0</div>
+          <div class="stat-label">Total Analyses</div>
+        </div>
+        <div class="stat-card">
+          <i class="material-icons" style="color:#f44336; font-size:32px;">warning</i>
+          <div class="stat-number" id="highRiskCount">0</div>
+          <div class="stat-label">High Risk</div>
+        </div>
+        <div class="stat-card">
+          <i class="material-icons" style="color:#ff9800; font-size:32px;">error_outline</i>
+          <div class="stat-number" id="mediumRiskCount">0</div>
+          <div class="stat-label">Medium Risk</div>
+        </div>
+        <div class="stat-card">
+          <i class="material-icons" style="color:#4caf50; font-size:32px;">check_circle</i>
+          <div class="stat-number" id="lowRiskCount">0</div>
+          <div class="stat-label">Low Risk</div>
+        </div>
+        <div class="stat-card">
+          <i class="material-icons" style="color:#e91e63; font-size:32px;">report</i>
+          <div class="stat-number" id="scamCount">0</div>
+          <div class="stat-label">Confirmed Scams</div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-container">
+        <div class="table-header">
+          <h5><i class="material-icons">list</i><span>Analysis Records</span></h5>
+          <button class="btn-flat white-text waves-effect" onclick="exportToCSV()">
+            <i class="material-icons">file_download</i><span>Export CSV</span>
+          </button>
+        </div>
+
+        <div class="filter-controls">
+          <div class="input-field"><input type="text" id="searchInput" placeholder="Search by email or text..."></div>
+          <select id="riskFilter" class="browser-default">
+            <option value="">All Risk Levels</option>
+            <option value="High">High Risk</option>
+            <option value="Medium">Medium Risk</option>
+            <option value="Low">Low Risk</option>
+          </select>
+          <select id="scamFilter" class="browser-default">
+            <option value="">All Records</option>
+            <option value="true">Confirmed Scams</option>
+            <option value="false">Not Scams</option>
+          </select>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="history-table" id="historyTable">
+            <thead>
+              <tr>
+                <th>Date/Time</th>
+                <th>Email</th>
+                <th>Message</th>
+                <th>Score</th>
+                <th>Risk Level</th>
+                <th>Indicators</th>
+                <th>Scam Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr class="loading-state">
+                <td colspan="8">
+                  <div class="preloader-wrapper small active">
+                    <div class="spinner-layer spinner-blue-only">
+                      <div class="circle-clipper left"><div class="circle"></div></div>
+                    </div>
+                  </div>
+                  <p>Loading history...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detailModal" class="modal">
+    <div class="modal-content">
+      <h4><i class="material-icons">info</i>Analysis Details</h4>
+      <div id="modalContent"></div>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+  </div>
+
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
   <script>
-    async function loadHistory() {
-      const res = await fetch("/admin/history-data");
-      const records = await res.json();
-      const tbody = document.querySelector("#historyTable tbody");
-      tbody.innerHTML = "";
+    let allRecords = [];
+    let filteredRecords = [];
+    let userRole = 'user';
 
-      records.forEach(record => {
-        const tr = document.createElement("tr");
+    // Navbar + Sidenav init (same behavior as analyse.html)
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidenavEl = document.getElementById('mobile-nav');
+      const navToggle = document.getElementById('nav-toggle');
+      const toggleIcon = navToggle.querySelector('.material-icons');
 
-        // Render indicators as list
-        let indicatorsHTML = "<ul>";
-        if (record.indicators && record.indicators.length > 0) {
-          record.indicators.forEach(ind => {
-            indicatorsHTML += `<li><strong>${ind.key}:</strong> ${ind.description}</li>`;
-          });
+      function syncToggleIcon(isOpen){
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+        toggleIcon.textContent = isOpen ? 'close' : 'menu';
+      }
+
+      const sidenavInstance = M.Sidenav.init(sidenavEl, {
+        edge: 'left', draggable: true,
+        onOpenEnd: () => syncToggleIcon(true),
+        onCloseEnd: () => syncToggleIcon(false)
+      });
+
+      navToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        sidenavInstance.isOpen ? sidenavInstance.close() : sidenavInstance.open();
+      });
+
+      document.querySelectorAll('#mobile-nav a').forEach(link => {
+        link.addEventListener('click', () => { if (sidenavInstance.isOpen) sidenavInstance.close(); });
+      });
+      syncToggleIcon(false);
+
+      // Modal
+      window.detailModalInstance = M.Modal.init(document.getElementById('detailModal'));
+
+      // Auth + data
+      checkAuth();
+      loadHistory();
+
+      // Filters
+      document.getElementById('searchInput').addEventListener('input', filterRecords);
+      document.getElementById('riskFilter').addEventListener('change', filterRecords);
+      document.getElementById('scamFilter').addEventListener('change', filterRecords);
+    });
+
+    // Auth state (reuses your /api/auth/check endpoint)
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/check', { credentials: 'include' });
+        if (!res.ok) return window.location.href = '/signin.html';
+
+        const data = await res.json();
+        userRole = data.role || 'user';
+        updateUIForAuth(data);
+
+        if (userRole !== 'admin') {
+          const adminBtn = document.getElementById('adminBtn');
+          if (adminBtn) adminBtn.style.display = 'none';
         }
-        indicatorsHTML += "</ul>";
-
-        tr.innerHTML = `
-          <td>${record.email}</td>
-          <td>${record.text}</td>
-          <td>${record.score}</td>
-          <td>${record.level}</td>
-          <td>${indicatorsHTML}</td>
-          <td>${record.isScam ? "✅ Yes" : "❌ No"}</td>
-          <td>${new Date(record.createdAt).toLocaleString()}</td>
-          <td><button onclick="deleteRecord('${record._id}')">Delete</button></td>
-        `;
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function deleteRecord(id) {
-      if (!confirm("Are you sure you want to delete this record?")) return;
-
-      const res = await fetch(`/admin/history/${id}`, {
-        method: "DELETE"
-      });
-
-      if (res.ok) {
-        loadHistory(); // reload after delete
-      } else {
-        alert("Failed to delete record");
+      } catch (e) {
+        console.error('Auth check failed:', e);
+        window.location.href = '/signin.html';
       }
     }
 
-    loadHistory();
+    function updateUIForAuth(data){
+      const navAuthSection = document.getElementById('navAuthSection');
+      const mobileAuthLinks = document.getElementById('mobileAuthLinks');
+      const mobileUserEmail = document.getElementById('mobileUserEmail');
+
+      if (data.authenticated){
+        navAuthSection.insertAdjacentHTML('beforeend', `
+          <li class="hide-on-med-and-down" style="display:flex; align-items:center; gap:10px;">
+            <span class="white-text" style="opacity:.9;">${data.email}</span>
+            <a href="/logout" class="btn-small red waves-effect waves-light"><i class="material-icons">exit_to_app</i><span>Logout</span></a>
+          </li>
+        `);
+        mobileAuthLinks.innerHTML = `<li><a href="/logout"><i class="material-icons">exit_to_app</i>Logout</a></li>`;
+        mobileUserEmail.textContent = data.email;
+      }
+    }
+
+    // Load history
+    async function loadHistory(){
+      try{
+        const r = await fetch('/admin/history-data', { credentials:'include' });
+        if(!r.ok) throw new Error('Failed to load history');
+        allRecords = await r.json();
+        filteredRecords = allRecords;
+        updateStats();
+        renderTable();
+      }catch(err){
+        console.error('Error loading history:', err);
+        showEmptyState('Failed to load history data');
+      }
+    }
+
+    // Stats
+    function updateStats(){
+      document.getElementById('totalCount').textContent = allRecords.length;
+      document.getElementById('highRiskCount').textContent = allRecords.filter(r=>r.level==='High').length;
+      document.getElementById('mediumRiskCount').textContent = allRecords.filter(r=>r.level==='Medium').length;
+      document.getElementById('lowRiskCount').textContent = allRecords.filter(r=>r.level==='Low').length;
+      document.getElementById('scamCount').textContent = allRecords.filter(r=>r.isScam).length;
+    }
+
+    // Filters
+    function filterRecords(){
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const risk = document.getElementById('riskFilter').value;
+      const scam = document.getElementById('scamFilter').value;
+
+      filteredRecords = allRecords.filter(rec => {
+        const matchesSearch = !q || rec.email.toLowerCase().includes(q) || rec.text.toLowerCase().includes(q);
+        const matchesRisk = !risk || rec.level === risk;
+        const matchesScam = !scam || (scam==='true' && rec.isScam) || (scam==='false' && !rec.isScam);
+        return matchesSearch && matchesRisk && matchesScam;
+      });
+
+      renderTable();
+    }
+
+    // Render
+    function renderTable(){
+      const tbody = document.getElementById('historyTableBody');
+      if(!filteredRecords.length){ return showEmptyState('No records found'); }
+
+      tbody.innerHTML = filteredRecords.map(record => `
+        <tr>
+          <td>${new Date(record.createdAt).toLocaleString()}</td>
+          <td>${record.email}</td>
+          <td>
+            <div class="text-preview" onclick="showDetail('${record._id}')" title="${record.text.replace(/"/g,'&quot;')}">
+              ${record.text}
+            </div>
+          </td>
+          <td>${record.score}</td>
+          <td><span class="risk-badge risk-${record.level.toLowerCase()}">${record.level}</span></td>
+          <td>${renderIndicators(record.indicators)}</td>
+          <td><span class="scam-badge ${record.isScam?'scam-yes':'scam-no'}">${record.isScam?'⚠️ Scam':'✓ Safe'}</span></td>
+          <td>
+            <button class="btn-action btn-view" onclick="showDetail('${record._id}')">
+              <i class="material-icons">visibility</i><span>View</span>
+            </button>
+            ${userRole==='admin' ? `
+            <button class="btn-action btn-delete" onclick="deleteRecord('${record._id}')">
+              <i class="material-icons">delete</i><span>Delete</span>
+            </button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderIndicators(indicators){
+      if(!indicators || !indicators.length) return '<span style="color:#999;">None</span>';
+      if(indicators.length <= 2){
+        return `<ul class="indicators-list">
+          ${indicators.map(ind => `<li><strong>${ind.key}:</strong> ${ind.description}</li>`).join('')}
+        </ul>`;
+      }
+      return `
+        <div style="cursor:pointer; color:#667eea;" onclick="showIndicators('${JSON.stringify(indicators).replace(/"/g,'&quot;')}')">
+          <i class="material-icons" style="font-size:16px; vertical-align:middle;">warning</i>
+          ${indicators.length} indicators
+        </div>`;
+    }
+
+    function showEmptyState(msg){
+      const tbody = document.getElementById('historyTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="material-icons">inbox</i>
+              <p>${msg}</p>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    // Detail modal
+    function showDetail(id){
+      const record = allRecords.find(r => r._id === id);
+      if(!record) return;
+
+      const c = document.getElementById('modalContent');
+      c.innerHTML = `
+        <div class="detail-row"><span class="detail-label">Date/Time:</span><span class="detail-value">${new Date(record.createdAt).toLocaleString()}</span></div>
+        <div class="detail-row"><span class="detail-label">Email:</span><span class="detail-value">${record.email}</span></div>
+        <div class="detail-row"><span class="detail-label">Risk Score:</span><span class="detail-value">${record.score}/100</span></div>
+        <div class="detail-row"><span class="detail-label">Risk Level:</span><span class="detail-value"><span class="risk-badge risk-${record.level.toLowerCase()}">${record.level}</span></span></div>
+        <div class="detail-row"><span class="detail-label">Scam Status:</span><span class="detail-value"><span class="scam-badge ${record.isScam?'scam-yes':'scam-no'}">${record.isScam?'⚠️ Confirmed Scam':'✓ Not a Scam'}</span></span></div>
+        <div class="detail-row"><span class="detail-label">Message:</span><span class="detail-value" style="white-space:pre-wrap;">${record.text}</span></div>
+        <div class="detail-row">
+          <span class="detail-label">Indicators:</span>
+          <span class="detail-value">
+            ${record.indicators && record.indicators.length ? `
+              <ul class="indicators-list">
+                ${record.indicators.map(ind => `<li><strong>${ind.key}:</strong> ${ind.description}</li>`).join('')}
+              </ul>` : '<span style="color:#999;">No indicators found</span>'}
+          </span>
+        </div>`;
+      window.detailModalInstance.open();
+    }
+    window.showDetail = showDetail;
+
+    function showIndicators(json){
+      try{
+        const arr = JSON.parse(json);
+        const html = arr.map(ind => `${ind.key}: ${ind.description}`).join('<br>');
+        M.toast({ html, displayLength: 5000 });
+      }catch(e){ console.error('Error showing indicators:', e); }
+    }
+    window.showIndicators = showIndicators;
+
+    // Delete (admin only)
+    async function deleteRecord(id){
+      if(!confirm('Are you sure you want to delete this record?')) return;
+      try{
+        const r = await fetch(`/admin/history/${id}`, { method:'DELETE', credentials:'include' });
+        if(!r.ok) throw new Error('Delete failed');
+        M.toast({html:'Record deleted successfully', classes:'green'});
+        loadHistory();
+      }catch(e){
+        console.error(e);
+        M.toast({html:'Failed to delete record', classes:'red'});
+      }
+    }
+    window.deleteRecord = deleteRecord;
+
+    // Export
+    function exportToCSV(){
+      if(!filteredRecords.length) return M.toast({html:'No records to export', classes:'orange'});
+      const headers = ['Date/Time','Email','Message','Score','Risk Level','Indicators Count','Scam Status'];
+      const rows = filteredRecords.map(r => [
+        new Date(r.createdAt).toLocaleString(),
+        r.email,
+        `"${r.text.replace(/"/g,'""')}"`,
+        r.score,
+        r.level,
+        r.indicators ? r.indicators.length : 0,
+        r.isScam ? 'Yes' : 'No'
+      ]);
+      const csv = [headers.join(','), ...rows.map(x=>x.join(','))].join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `scamsniffer_history_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      M.toast({html:`Exported ${filteredRecords.length} records`, classes:'green'});
+    }
+    window.exportToCSV = exportToCSV;
   </script>
 </body>
 </html>

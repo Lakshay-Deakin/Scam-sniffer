@@ -10,12 +10,12 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-   <!-- Brand favicon -->
+  <!-- Brand favicon -->
   <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23667eea'/%3E%3Cstop offset='1' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M32 6l18 6v13c0 13-8.3 24.4-18 28-9.7-3.6-18-15-18-28V12l18-6z'/%3E%3Cpath fill='white' d='M28 34l-6-6-4 4 10 10 16-16-4-4z'/%3E%3C/svg%3E">
+
   <style>
     :root{
-      /* Shared look & feel with Home page */
       --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       --shadow-1: 0 8px 20px rgba(0,0,0,.18);
       --shadow-2: 0 15px 35px rgba(0,0,0,.22);
@@ -28,7 +28,6 @@
       --gutter: 16px;
     }
 
-    /* Base */
     html, body { height: 100%; }
     body{
       background: var(--gradient-1);
@@ -40,19 +39,17 @@
       overflow-x: hidden;
     }
 
-    /* Navbar & single mobile toggle (same as home) */
     .navbar-fixed { z-index: 1000; }
     .brand-logo { font-weight: 700; letter-spacing:.2px; }
 
-    /* Single, always-visible mobile toggle */
     #nav-toggle{
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 10px);
       left: calc(env(safe-area-inset-left, 0px) + 10px);
-      z-index: 2500; /* above sidenav & overlay */
+      z-index: 2500;
       width: 44px; height: 44px;
       border-radius: 10px;
-      display: none;             /* only show on small screens */
+      display: none;
       align-items: center; justify-content: center;
       background: rgba(33,150,243,.95);
       box-shadow: 0 6px 16px rgba(0,0,0,.25);
@@ -61,9 +58,10 @@
     #nav-toggle .material-icons{ line-height:1; font-size: 26px; }
     @media (max-width: 992px){
       #nav-toggle{ display: inline-flex; }
+      /* prevent hamburger/brand overlap */
+      .brand-logo{ padding-left: 52px; }
     }
 
-    /* Sidenav */
     .sidenav{ z-index: 2000; padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
     .sidenav .user-view{
       padding-top: 12px;
@@ -75,12 +73,10 @@
       text-shadow: 0 1px 2px rgba(0,0,0,.35);
     }
 
-    /* Main spacing so card sits below fixed navbar */
     main{ padding: 24px 12px 40px; }
     @media (min-width: 601px){ main{ padding-top: 36px; } }
     @media (min-width: 993px){ main{ padding-top: 48px; } }
 
-    /* Container */
     .signup-container{
       background: rgba(255,255,255,.96);
       backdrop-filter: blur(10px);
@@ -90,7 +86,7 @@
       width: var(--container-w);
       position: relative;
       overflow: hidden;
-      margin: 24px auto 48px; /* centered; does NOT take full page height */
+      margin: 24px auto 48px;
     }
     .signup-container::before{
       content:"";
@@ -98,7 +94,6 @@
       background: var(--gradient-1);
     }
 
-    /* Floating BG elements */
     .floating-elements{
       position:absolute; inset:0; pointer-events:none; z-index:-1;
     }
@@ -111,7 +106,6 @@
     .floating-elements::after { width: 56px; height:56px; bottom:18%; left:-24px; animation-delay: 2.6s; }
     @keyframes float{ 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-14px) } }
 
-    /* Brand */
     .brand-section{ text-align:center; margin-bottom: 14px; }
     .brand-icon{ font-size: 3.2rem; color:#667eea; margin-bottom: 6px; }
     .brand-title{
@@ -125,7 +119,6 @@
       color:#666; margin: 6px 0 18px; font-size: clamp(.98rem, 2.6vw, 1.1rem);
     }
 
-    /* Feature badges */
     .features-grid{
       display:grid; gap: 10px 12px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -140,7 +133,6 @@
     }
     .feature-item i{ font-size: 1.1rem; }
 
-    /* Inputs */
     .input-field{ position: relative; margin-bottom: 18px; }
     .input-field label{
       color:#666; font-size: .92rem; margin-bottom: 8px; display:block; font-weight: 600;
@@ -157,11 +149,17 @@
       box-shadow: 0 0 0 3px rgba(102,126,234,.12);
     }
     .prefix-icon{
-      position:absolute; right: 12px; top: 50%; transform: translateY(2px);
+      position:absolute; right: 12px; top: 50%;
+      transform: translateY(-50%); /* perfect vertical center */
       color:#667eea; font-size: 1.2rem; pointer-events: none;
     }
 
-    /* Role selection */
+    .prefix-icon-pass-lock{
+      position:absolute; right: 12px; top: 30%;
+      transform: translateY(-50%); /* perfect vertical center */
+      color:#667eea; font-size: 1.2rem; pointer-events: none;
+    }
+    
     .role-label{ color:#666; font-size:.92rem; margin: 10px 0 10px; font-weight:600; display:block; }
     .role-selection{
       display:grid; gap: 12px; grid-template-columns: repeat(2, minmax(0,1fr));
@@ -170,7 +168,7 @@
     .role-card{
       border: 2px solid #e0e0e0; border-radius: 12px;
       padding: 16px; text-align:center; cursor:pointer; background:#fff;
-      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+      transition: transform .2s, box-shadow .2s, border-color .2s, color .2s, background .2s;
       min-height: 110px; display:flex; flex-direction:column; align-items:center; justify-content:center;
     }
     .role-card:hover{ border-color:#667eea; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
@@ -183,17 +181,60 @@
     }
     .role-card.selected i{ color:#fff; }
 
-    /* Password strength */
     .password-strength{ margin-top: 6px; font-size: .82rem; }
     .strength-bar{ height: 4px; border-radius: 2px; background:#e0e0e0; margin-top: 6px; overflow:hidden; }
     .strength-fill{ height:100%; transition: width .25s ease, background .25s ease; border-radius:2px; }
 
-    /* Buttons (consistent with home) */
-    .btn, .btn-large, .btn-small, .btn-custom{
-      display: inline-flex !important; align-items:center; justify-content:center; gap: 8px;
-      line-height: 1.2 !important; text-transform: none; white-space: nowrap;
+    /* ---------- Buttons: consistent, centered icon+label ---------- */
+    .btn, .btn-large, .btn-small, .btn-custom, .btn-outline{
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      line-height: 1 !important;
+      text-transform: none;
+      text-decoration: none;
+      white-space: nowrap;
     }
     .btn-large{ min-height: 52px; padding: 0 22px; }
+
+    /* Group icon+label as one centered unit */
+    .btn .btn-content,
+    .btn-large .btn-content,
+    .btn-small .btn-content,
+    .btn-outline .btn-content,
+    .btn-custom .btn-content{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Neutralize Materialize float helpers inside buttons */
+    .btn i.left, .btn i.right,
+    .btn-large i.left, .btn-large i.right,
+    .btn-outline i.left, .btn-outline i.right,
+    .btn-custom i.left, .btn-custom i.right{
+      float: none !important;
+      margin: 0 !important;
+    }
+
+    /* Perfect centering for material icons in buttons */
+    .btn i.material-icons,
+    .btn-large i.material-icons,
+    .btn-small i.material-icons,
+    .btn-outline i.material-icons,
+    .btn-custom i.material-icons{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      line-height: 1;
+      height: 1em;
+      width: 1em;
+      vertical-align: middle;
+    }
+
     .btn-custom{
       background: var(--gradient-1);
       color:#fff; border: 0; border-radius: 999px; padding: 12px 28px; font-weight:700;
@@ -201,6 +242,7 @@
       transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
     .btn-custom:hover{ transform: translateY(-2px); box-shadow: var(--shadow-2); }
+
     .btn-outline{
       color:#667eea; border: 2px solid #667eea; border-radius: 999px; padding: 10px 20px; font-weight:700; background:#fff;
       transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
@@ -209,23 +251,24 @@
 
     .signup-btn{ width: 100%; }
 
-    /* Info panel */
     .security-info{
       background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
       border: 1px solid #4caf50; border-radius: 12px;
       padding: 12px; margin-top: 14px; display:flex; align-items:center; gap:8px;
     }
     .security-info i{ color:#4caf50; font-size: 1.4rem; }
-    .security-info p{ margin:0; color:#2e7d32; font-size: .9rem; }
+    .security-info p{ margin:0; color: #2e7d32; font-size: .9rem; }
 
-    /* Dividers / Links */
     .divider{ text-align:center; margin: 18px 0; position:relative; }
     .divider::before{ content:""; position:absolute; inset: 50% 0 auto 0; height:1px; background:#e0e0e0; }
     .divider span{ position:relative; background: rgba(255,255,255,.96); padding: 0 14px; color:#666; font-weight:600; }
     .login-link{ text-align:center; margin-top: 6px; }
     .login-link .btn-outline{ min-height: 44px; }
 
-    /* Responsive tweaks */
+    /* Spinner */
+    .loading{ display: none; }
+    .loading.active{ display: inline-flex; align-items:center; justify-content:center; }
+
     @media (max-width: 600px){
       .signup-container{ padding: var(--pad-md); box-shadow: 0 8px 22px rgba(0,0,0,.18); }
       .features-grid{ grid-template-columns: 1fr; }
@@ -233,7 +276,6 @@
       .feature-item{ min-height: 42px; }
     }
 
-    /* Respect "reduce motion" */
     @media (prefers-reduced-motion: reduce){
       *, *::before, *::after{ animation: none !important; transition: none !important; scroll-behavior: auto !important; }
     }
@@ -241,19 +283,16 @@
 </head>
 <body>
 
-  <!-- Single, always-visible mobile toggle (same as home) -->
   <a href="#" id="nav-toggle" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false">
     <i class="material-icons">menu</i>
   </a>
 
-  <!-- Top Navigation (same as home) -->
   <div class="navbar-fixed" role="navigation">
     <nav class="blue darken-2">
       <div class="nav-wrapper container">
         <a href="/" class="brand-logo" aria-label="ScamSniffer Home">
           <i class="material-icons left" aria-hidden="true">security</i>ScamSniffer
         </a>
-        <!-- no extra .sidenav-trigger (only one hamburger on mobile) -->
         <ul class="right hide-on-med-and-down">
           <li><a href="/#home">Home</a></li>
           <li><a href="/#features">Features</a></li>
@@ -264,7 +303,6 @@
     </nav>
   </div>
 
-  <!-- Mobile Side Navigation -->
   <ul class="sidenav" id="mobile-nav">
     <li>
       <div class="user-view blue darken-2 white-text">
@@ -283,14 +321,12 @@
     <div class="floating-elements" aria-hidden="true"></div>
 
     <div class="signup-container" role="main" aria-labelledby="title">
-      <!-- Brand -->
       <div class="brand-section">
         <i class="material-icons brand-icon" aria-hidden="true">security</i>
         <h1 class="brand-title" id="title">ScamSniffer</h1>
         <p class="brand-subtitle">Join the fight against digital fraud</p>
       </div>
 
-      <!-- Features -->
       <div class="features-grid" aria-label="Highlights">
         <div class="feature-item">
           <i class="material-icons" aria-hidden="true">flash_on</i> Real-time Analysis
@@ -306,7 +342,6 @@
         </div>
       </div>
 
-      <!-- Form -->
       <form action="/register" method="POST" id="signupForm" novalidate>
         <div class="input-field">
           <label for="email">Email Address</label>
@@ -317,7 +352,7 @@
         <div class="input-field">
           <label for="password">Password</label>
           <input type="password" name="password" id="password" required minlength="6" autocomplete="new-password"/>
-          <i class="material-icons prefix-icon" aria-hidden="true">lock</i>
+          <i class="material-icons prefix-icon-pass-lock" aria-hidden="true">lock</i>
 
           <div class="password-strength" aria-live="polite">
             <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
@@ -332,7 +367,6 @@
           <span id="passwordMatch" style="font-size:.82rem; margin-top:6px; display:block;"></span>
         </div>
 
-        <!-- Role -->
         <label class="role-label">Choose Your Role</label>
         <div class="role-selection" role="radiogroup" aria-label="Role">
           <div class="role-card selected" data-role="user" role="radio" aria-checked="true" tabindex="0">
@@ -353,32 +387,31 @@
           <span class="loading" id="loadingSpinner">
             <i class="material-icons" aria-hidden="true">refresh</i>
           </span>
-          <span id="buttonText">
+          <span id="buttonText" class="btn-content">
             <i class="material-icons" aria-hidden="true">person_add</i>
-            Create Account
+            <span>Create Account</span>
           </span>
         </button>
       </form>
 
-      <!-- Info -->
       <div class="security-info" aria-live="polite">
         <i class="material-icons" aria-hidden="true">verified_user</i>
         <p>Your data is encrypted and secure. We never share your information with third parties.</p>
       </div>
 
-      <!-- Divider -->
       <div class="divider"><span>Already have an account?</span></div>
 
-      <!-- Login -->
       <div class="login-link">
         <a href="/signin.html" class="btn-outline">
-          <i class="material-icons" aria-hidden="true">login</i> Sign In Instead
+          <span class="btn-content">
+            <i class="material-icons" aria-hidden="true">login</i>
+            <span>Sign In Instead</span>
+          </span>
         </a>
       </div>
     </div>
   </main>
 
-  <!-- Footer (optional, matches home if you want it) -->
   <footer class="page-footer blue darken-3" style="margin-top:0;">
     <div class="container">
       <div class="row">
@@ -401,12 +434,10 @@
     </div>
   </footer>
 
-  <!-- Materialize JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      /* ===== Navbar: single hamburger toggle + icon sync (same as home) ===== */
       const sidenavEl = document.getElementById('mobile-nav');
       const navToggle = document.getElementById('nav-toggle');
       const toggleIcon = navToggle.querySelector('.material-icons');
@@ -427,23 +458,16 @@
         e.preventDefault();
         sidenavInstance.isOpen ? sidenavInstance.close() : sidenavInstance.open();
       });
-
-      // Close when a link inside the drawer is clicked
       document.querySelectorAll('#mobile-nav a').forEach(link => {
         link.addEventListener('click', () => { if (sidenavInstance.isOpen) sidenavInstance.close(); });
       });
-
       syncToggleIcon(false);
 
-      /* ===== Role selection ===== */
       const roleCards = document.querySelectorAll('.role-card');
       const selectedRoleInput = document.getElementById('selectedRole');
 
       function setRole(card){
-        roleCards.forEach(c => {
-          c.classList.remove('selected');
-          c.setAttribute('aria-checked', 'false');
-        });
+        roleCards.forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-checked', 'false'); });
         card.classList.add('selected');
         card.setAttribute('aria-checked', 'true');
         selectedRoleInput.value = card.dataset.role;
@@ -455,7 +479,6 @@
         });
       });
 
-      /* ===== Password strength & match ===== */
       const passwordInput = document.getElementById('password');
       const confirmPasswordInput = document.getElementById('confirmPassword');
       const strengthFill = document.getElementById('strengthFill');
@@ -465,12 +488,10 @@
       function checkPasswordStrength(password) {
         let strength = 0;
         let feedback = [];
-
         if (password.length >= 8) strength += 25; else feedback.push('8+ chars');
         if (/[a-z]/.test(password)) strength += 25; else feedback.push('lowercase');
         if (/[A-Z]/.test(password)) strength += 25; else feedback.push('uppercase');
         if (/[0-9]/.test(password)) strength += 25; else feedback.push('number');
-
         return { strength, feedback };
       }
 
@@ -512,7 +533,6 @@
       passwordInput.addEventListener('input', (e)=>{ updateStrengthUI(e.target.value); checkPasswordMatch(); });
       confirmPasswordInput.addEventListener('input', checkPasswordMatch);
 
-      // Email validation hint
       const emailInput = document.getElementById('email');
       emailInput.addEventListener('blur', function(){
         const email = this.value.trim();
@@ -521,7 +541,6 @@
         this.style.borderColor = emailRegex.test(email) ? '#4caf50' : '#f44336';
       });
 
-      /* ===== Submit handling ===== */
       const signupForm = document.getElementById('signupForm');
       const loadingSpinner = document.getElementById('loadingSpinner');
       const buttonText = document.getElementById('buttonText');
@@ -540,14 +559,12 @@
           return;
         }
 
-        // Loading state
-        loadingSpinner.classList.add('active');
-        buttonText.style.display = 'none';
-        
+        loadingSpinner.classList.add('active');       // show spinner (CSS handles display)
+        buttonText.style.display = 'none';            // hide text
       });
 
-      // Focus & entry animation
       emailInput.focus();
+
       const container = document.querySelector('.signup-container');
       container.style.transform = 'translateY(18px)';
       container.style.opacity = '0';
