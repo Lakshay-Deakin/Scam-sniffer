@@ -688,19 +688,19 @@
       navAuthSection.innerHTML += `
         <li class="user-info">
           <span class="user-email">${data.email}</span>
-          <a href="/logout" class="btn-small red">Logout</a>
+          <a href="/users/logout" class="btn-small red">Logout</a>
         </li>
       `;
       
       mobileAuthLinks.innerHTML = `
-        <li><a href="/logout"><i class="material-icons">exit_to_app</i>Logout</a></li>
+        <li><a href="/users/logout"><i class="material-icons">exit_to_app</i>Logout</a></li>
       `;
     }
 
     // Fetch users
     async function fetchUsers() {
       try {
-        const response = await fetch('/users', {
+        const response = await fetch('/users/allusers', {
           credentials: 'include'
         });
         

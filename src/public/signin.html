@@ -267,7 +267,7 @@
         </a>
         <ul class="right hide-on-med-and-down">
           <li><a href="/index.html#home">Home</a></li>
-          <li><a href="/signup">Sign Up</a></li>
+          <li><a href="/users/signup">Sign Up</a></li>
         </ul>
       </div>
     </nav>
@@ -283,7 +283,7 @@
       </div>
     </li>
     <li><a href="/index.html"><i class="material-icons">home</i>Home</a></li>
-    <li><a href="/signup"><i class="material-icons">person_add</i>Sign Up</a></li>
+    <li><a href="/users/signup"><i class="material-icons">person_add</i>Sign Up</a></li>
   </ul>
 
   <main>
@@ -310,7 +310,7 @@
       </div>
 
       <!-- Form (handled via JS to control alerts) -->
-      <form action="/login" method="POST" id="signinForm" novalidate>
+      <form action="/users/login" method="POST" id="signinForm" novalidate>
         <div class="input-field">
           <label for="email">Email Address</label>
           <input type="email" name="email" id="email" required inputmode="email" autocomplete="email">
@@ -344,7 +344,7 @@
 
       <div class="divider"><span>Don't have an account?</span></div>
       <div class="signup-link">
-        <a href="/signup" class="btn-outline">
+        <a href="/users/signup" class="btn-outline">
           <span class="btn-content">
             <i class="material-icons" aria-hidden="true">person_add</i>
             <span>Create New Account</span>
@@ -484,7 +484,7 @@
         setLoading(true);
         try{
           const body = new URLSearchParams({ email: emailInput.value.trim(), password: passwordInput.value });
-          const resp = await fetch('/login', {
+          const resp = await fetch('/users/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: body.toString(),

@@ -411,12 +411,12 @@
         navAuthSection.insertAdjacentHTML('beforeend', `
           <li style="display:flex; align-items:center; gap:10px;">
             <span class="white-text" style="opacity:.9;">${data.email}</span>
-            <a href="/logout" class="btn-small red waves-effect waves-light">
+            <a href="/users/logout" class="btn-small red waves-effect waves-light">
               <i class="material-icons">exit_to_app</i><span>Logout</span>
             </a>
           </li>
         `);
-        mobileAuthLinks.innerHTML = `<li><a href="/logout"><i class="material-icons">exit_to_app</i>Logout</a></li>`;
+        mobileAuthLinks.innerHTML = `<li><a href="/users/logout"><i class="material-icons">exit_to_app</i>Logout</a></li>`;
         mobileUserEmail.textContent = data.email || 'Admin Dashboard';
       }catch(err){
         console.error('Auth check failed:', err);
