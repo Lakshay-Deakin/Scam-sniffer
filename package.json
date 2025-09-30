@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node index.js",
     "dev": "nodemon app.js",
     "test": "mocha test/**/*.test.js --timeout 10000 --exit",
     "test:frontend": "mocha \"test/frontend/**/*.js\" --require ./test/frontend/setup.js",
